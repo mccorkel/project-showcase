@@ -338,6 +338,18 @@ All routes under `/secure/*` require authentication. Attempting to access these 
     - Revoke delegations
     - Set delegation expiration
 
+### Template Management (Authenticated Users)
+
+- **`/secure/templates`** - Template Creation and Management
+  - Description: Create and manage custom showcase templates
+  - Authentication: Required
+  - Features:
+    - View instructions for creating templates
+    - Create new templates using HTML and placeholders
+    - Generate previews of templates with sample data
+    - Save templates to an S3 bucket
+    - Load available templates from the S3 bucket for use in showcases
+
 ## Authentication Flow
 
 1. User navigates to the application (landing page)
@@ -412,6 +424,7 @@ Users with multiple roles can switch between different views using the navigatio
 - Submissions
 - Showcase
 - Analytics
+- Templates
 - Logout
 
 ### Instructor Navigation
@@ -421,6 +434,7 @@ Users with multiple roles can switch between different views using the navigatio
 - Students
 - Submissions
 - Analytics
+- Templates
 - Return to Student View (if user has dual role)
 - Logout
 
