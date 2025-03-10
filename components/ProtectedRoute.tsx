@@ -26,10 +26,10 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         
         setIsAuthenticated(!!authSession.tokens);
         
-        // Get user roles from token claims if available
-        if (authSession.tokens?.idToken?.payload['cognito:groups']) {
-          setUserRoles(authSession.tokens.idToken.payload['cognito:groups'] as string[]);
-        }
+        // For now, we'll assume all authenticated users have the 'user' role
+        // In a real application, you would fetch the user's roles from your database
+        // or from custom attributes in the user's profile
+        setUserRoles(['user']);
         
         setIsLoading(false);
       } catch (error) {
@@ -46,7 +46,15 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   // Check if user has required roles
   const hasRequiredRoles = () => {
     if (requiredRoles.length === 0) return true;
-    return requiredRoles.some(role => userRoles.includes(role));
+    
+    // If 'user' role is sufficient, allow access
+    if (requiredRoles.includes('user') && userRoles.includes('user')) {
+      return true;
+    }
+    
+    // For more specific roles, you would implement your custom logic here
+    // This is a placeholder for your application's role-checking logic
+    return false;
   };
 
   if (isLoading) {
@@ -58,7 +66,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return null;
   }
 
-  if (!hasRequiredRoles()) {
+  if (requiredRoles.length > 0 && !hasRequiredRoles()) {
     router.push('/403');
     return null;
   }
