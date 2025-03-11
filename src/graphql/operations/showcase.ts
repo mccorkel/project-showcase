@@ -269,4 +269,50 @@ export const getPublishedShowcase = /* GraphQL */ `
       }
     }
   }
+`;
+
+// Create template mutation
+export const createTemplate = /* GraphQL */ `
+  mutation CreateTemplate($input: CreateTemplateInput!) {
+    createTemplate(input: $input) {
+      id
+      name
+      description
+      thumbnailUrl
+      category
+      tags
+      features
+      isPublic
+      createdBy
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+// Update template mutation
+export const updateTemplate = /* GraphQL */ `
+  mutation UpdateTemplate($input: UpdateTemplateInput!) {
+    updateTemplate(input: $input) {
+      id
+      name
+      description
+      thumbnailUrl
+      category
+      tags
+      features
+      isPublic
+      updatedAt
+    }
+  }
+`;
+
+// Generate template preview mutation
+export const generateTemplatePreview = /* GraphQL */ `
+  mutation GenerateTemplatePreview($templateId: ID!, $showcaseData: AWSJSON!) {
+    generateTemplatePreview(templateId: $templateId, showcaseData: $showcaseData) {
+      previewUrl
+      expiresAt
+    }
+  }
 `; 
