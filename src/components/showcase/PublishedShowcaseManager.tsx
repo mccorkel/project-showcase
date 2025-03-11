@@ -508,7 +508,7 @@ const PublishedShowcaseManager: React.FC<PublishedShowcaseManagerProps> = ({ onB
                     label="Make showcase public"
                     labelPosition="start"
                     isChecked={visibilitySettings.isPublic}
-                    onChange={(e) => setVisibilitySettings({
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setVisibilitySettings({
                       ...visibilitySettings,
                       isPublic: e.target.checked
                     })}
@@ -519,7 +519,7 @@ const PublishedShowcaseManager: React.FC<PublishedShowcaseManagerProps> = ({ onB
                       <SelectField
                         label="Access Type"
                         value={visibilitySettings.accessType}
-                        onChange={(e) => setVisibilitySettings({
+                        onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setVisibilitySettings({
                           ...visibilitySettings,
                           accessType: e.target.value
                         })}
