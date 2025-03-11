@@ -3,23 +3,50 @@ import { generateClient } from 'aws-amplify/api';
 // Get the current user's showcase
 export const getShowcase = /* GraphQL */ `
   query GetShowcase($studentProfileId: ID!) {
-    getShowcase(studentProfileId: $studentProfileId) {
+    getShowcaseByStudentProfileId(studentProfileId: $studentProfileId) {
       id
       studentProfileId
-      cognitoUserId
-      username
       templateId
-      profile
-      projects
-      experience
-      career
-      blogs
-      customization
-      visibility
-      analytics
-      publication
-      meta
-      previewData
+      projects {
+        id
+        title
+        description
+        technologies
+        featuredImageUrl
+        repoLink
+        demoLink
+        deployedUrl
+        isIncluded
+        displayOrder
+      }
+      customization {
+        themeColor
+        accentColor
+        fontPreference
+        layoutPreference
+        sectionsOrder
+        sectionsVisibility {
+          about
+          projects
+          skills
+          experience
+          education
+          blogs
+          contact
+        }
+      }
+      visibility {
+        isPublic
+        accessType
+        password
+        scheduledDate
+        customDomain
+      }
+      publishedUrl
+      lastPublished
+      lastUpdated
+      createdAt
+      updatedAt
     }
   }
 `;
@@ -49,64 +76,27 @@ export const getShowcaseByUsername = /* GraphQL */ `
 
 // Create a new showcase
 export const createShowcase = /* GraphQL */ `
-  mutation CreateShowcase(
-    $studentProfileId: ID!
-    $cognitoUserId: String!
-    $username: String!
-    $templateId: String
-    $profile: AWSJSON
-    $projects: [AWSJSON]
-    $customization: AWSJSON
-    $visibility: AWSJSON
-  ) {
-    createShowcase(
-      input: {
-        studentProfileId: $studentProfileId
-        cognitoUserId: $cognitoUserId
-        username: $username
-        templateId: $templateId
-        profile: $profile
-        projects: $projects
-        customization: $customization
-        visibility: $visibility
-      }
-    ) {
+  mutation CreateShowcase($input: CreateShowcaseInput!) {
+    createShowcase(input: $input) {
       id
       studentProfileId
-      username
+      templateId
+      lastUpdated
+      createdAt
+      updatedAt
     }
   }
 `;
 
 // Update an existing showcase
 export const updateShowcase = /* GraphQL */ `
-  mutation UpdateShowcase(
-    $id: ID!
-    $templateId: String
-    $profile: AWSJSON
-    $projects: [AWSJSON]
-    $experience: [AWSJSON]
-    $career: AWSJSON
-    $blogs: [AWSJSON]
-    $customization: AWSJSON
-    $visibility: AWSJSON
-  ) {
-    updateShowcase(
-      input: {
-        id: $id
-        templateId: $templateId
-        profile: $profile
-        projects: $projects
-        experience: $experience
-        career: $career
-        blogs: $blogs
-        customization: $customization
-        visibility: $visibility
-      }
-    ) {
+  mutation UpdateShowcase($input: UpdateShowcaseInput!) {
+    updateShowcase(input: $input) {
       id
       studentProfileId
-      username
+      templateId
+      lastUpdated
+      updatedAt
     }
   }
 `;
@@ -145,31 +135,34 @@ export const generateShowcasePreview = /* GraphQL */ `
 
 // Publish the showcase
 export const publishShowcase = /* GraphQL */ `
-  mutation PublishShowcase(
-    $id: ID!
-  ) {
-    publishShowcase(
-      id: $id
-    ) {
-      publicUrl
-      publishedAt
+  mutation PublishShowcase($id: ID!) {
+    publishShowcase(id: $id) {
+      id
+      studentProfileId
+      publishedUrl
+      lastPublished
+      updatedAt
     }
   }
 `;
 
-// Get all available templates
+// Get templates query
 export const getTemplates = /* GraphQL */ `
-  query GetTemplates {
-    listTemplates(filter: { isActive: { eq: true } }) {
+  query GetTemplates($limit: Int, $nextToken: String) {
+    listTemplates(limit: $limit, nextToken: $nextToken) {
       items {
         id
         name
         description
         thumbnailUrl
-        defaultTheme
+        previewUrl
+        category
+        tags
         features
-        customizationOptions
+        createdAt
+        updatedAt
       }
+      nextToken
     }
   }
 `;
@@ -186,6 +179,94 @@ export const getTemplate = /* GraphQL */ `
       features
       templateFiles
       customizationOptions
+    }
+  }
+`;
+
+// Get template by ID query
+export const getTemplateById = /* GraphQL */ `
+  query GetTemplateById($id: ID!) {
+    getTemplate(id: $id) {
+      id
+      name
+      description
+      thumbnailUrl
+      previewUrl
+      category
+      tags
+      features
+      templateData
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+// Get published showcase by URL query
+export const getPublishedShowcase = /* GraphQL */ `
+  query GetPublishedShowcase($url: String!) {
+    getPublishedShowcaseByUrl(url: $url) {
+      id
+      studentProfileId
+      templateId
+      projects {
+        id
+        title
+        description
+        technologies
+        featuredImageUrl
+        repoLink
+        demoLink
+        deployedUrl
+        isIncluded
+        displayOrder
+      }
+      customization {
+        themeColor
+        accentColor
+        fontPreference
+        layoutPreference
+        sectionsOrder
+        sectionsVisibility {
+          about
+          projects
+          skills
+          experience
+          education
+          blogs
+          contact
+        }
+      }
+      publishedUrl
+      lastPublished
+      studentProfile {
+        id
+        firstName
+        lastName
+        email
+        bio
+        avatarUrl
+        socialLinks {
+          platform
+          url
+        }
+        skills
+        education {
+          institution
+          degree
+          fieldOfStudy
+          startDate
+          endDate
+          description
+        }
+        experience {
+          company
+          position
+          startDate
+          endDate
+          description
+        }
+      }
     }
   }
 `; 
