@@ -343,7 +343,7 @@ export const generateTemplatePreview = /* GraphQL */ `
   }
 `;
 
-// Rollback to a previous version
+// Rollback to a previous version of a published showcase
 export const rollbackToVersion = /* GraphQL */ `
   mutation RollbackToVersion($showcaseId: ID!, $version: Int!) {
     rollbackToVersion(showcaseId: $showcaseId, version: $version) {
