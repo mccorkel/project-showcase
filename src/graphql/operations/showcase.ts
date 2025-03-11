@@ -103,18 +103,17 @@ export const updateShowcase = /* GraphQL */ `
 
 // Update showcase visibility
 export const updateShowcaseVisibility = /* GraphQL */ `
-  mutation UpdateShowcaseVisibility(
-    $id: ID!
-    $visibility: AWSJSON!
-  ) {
-    updateShowcase(
-      input: {
-        id: $id
-        visibility: $visibility
-      }
-    ) {
+  mutation UpdateShowcaseVisibility($id: ID!, $visibility: ShowcaseVisibilityInput!) {
+    updateShowcaseVisibility(id: $id, visibility: $visibility) {
       id
-      visibility
+      visibility {
+        isPublic
+        accessType
+        password
+        scheduledDate
+        customDomain
+      }
+      updatedAt
     }
   }
 `;
@@ -133,15 +132,42 @@ export const generateShowcasePreview = /* GraphQL */ `
   }
 `;
 
-// Publish the showcase
+// Get publication history query
+export const getPublicationHistory = /* GraphQL */ `
+  query GetPublicationHistory($showcaseId: ID!) {
+    getPublicationHistory(showcaseId: $showcaseId) {
+      items {
+        version
+        publishedAt
+        publishedBy
+        status
+        notes
+        url
+      }
+      nextToken
+    }
+  }
+`;
+
+// Update publishShowcase mutation to include additional parameters
 export const publishShowcase = /* GraphQL */ `
-  mutation PublishShowcase($id: ID!) {
-    publishShowcase(id: $id) {
+  mutation PublishShowcase($id: ID!, $isPublic: Boolean, $customDomain: String, $notes: String) {
+    publishShowcase(id: $id, isPublic: $isPublic, customDomain: $customDomain, notes: $notes) {
       id
       studentProfileId
       publishedUrl
       lastPublished
       updatedAt
+      publication {
+        status
+        version
+        publishedFiles {
+          htmlPath
+          cssPath
+          jsPath
+          assetsPath
+        }
+      }
     }
   }
 `;
@@ -313,6 +339,21 @@ export const generateTemplatePreview = /* GraphQL */ `
     generateTemplatePreview(templateId: $templateId, showcaseData: $showcaseData) {
       previewUrl
       expiresAt
+    }
+  }
+`;
+
+// Rollback to a previous version
+export const rollbackToVersion = /* GraphQL */ `
+  mutation RollbackToVersion($showcaseId: ID!, $version: Int!) {
+    rollbackToVersion(showcaseId: $showcaseId, version: $version) {
+      id
+      publishedUrl
+      lastPublished
+      publication {
+        status
+        version
+      }
     }
   }
 `; 
