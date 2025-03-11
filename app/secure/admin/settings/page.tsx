@@ -2,10 +2,10 @@
 
 import { Heading, View, Text, Card, Flex, Divider } from '@aws-amplify/ui-react';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import CohortManagement from '@/src/components/admin/CohortManagement';
+import SystemSettings from '@/src/components/admin/SystemSettings';
 import { useAuth } from '@/contexts/AuthContext';
 
-const AdminCohortManagementPage = () => {
+const AdminSystemSettingsPage = () => {
   const { user, isLoading } = useAuth();
 
   if (isLoading) {
@@ -31,17 +31,18 @@ const AdminCohortManagementPage = () => {
           <Flex direction="column" gap="1.5rem">
             <Card variation="elevated">
               <Flex direction="column" padding="1.5rem" gap="1rem">
-                <Heading level={2}>Cohort Management</Heading>
-                <Text>Create, edit, and manage cohorts for the Student Project Showcase platform.</Text>
+                <Heading level={2}>System Settings</Heading>
+                <Text>Configure system-wide settings for the Student Project Showcase platform.</Text>
                 <Divider />
                 <Text>
-                  As an administrator, you can create new cohorts, assign instructors, update cohort details, 
-                  and manage the status of each cohort. Use the filters to quickly find specific cohorts.
+                  As an administrator, you can customize various aspects of the platform including general settings,
+                  showcase features, user management, notifications, analytics, and security settings.
+                  Changes made here will affect the entire platform.
                 </Text>
               </Flex>
             </Card>
             
-            <CohortManagement />
+            <SystemSettings />
           </Flex>
         </View>
       )}
@@ -49,4 +50,4 @@ const AdminCohortManagementPage = () => {
   );
 };
 
-export default AdminCohortManagementPage; 
+export default AdminSystemSettingsPage; 

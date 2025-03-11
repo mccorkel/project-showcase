@@ -1,8 +1,7 @@
-"use client";
+'use client';
 
 import React from 'react';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
   Card, 
@@ -12,9 +11,17 @@ import {
   Flex, 
   Loader
 } from '@aws-amplify/ui-react';
-import CohortManagement from '../../../../src/components/instructor/CohortManagement';
+import Link from 'next/link';
+import FeedbackSubmission from '../../../../../src/components/instructor/FeedbackSubmission';
 
-export default function InstructorCohortsPage() {
+interface FeedbackSubmissionPageProps {
+  params: {
+    id: string;
+  };
+}
+
+export default function FeedbackSubmissionPage({ params }: FeedbackSubmissionPageProps) {
+  const { id } = params;
   const { user, isLoading: authLoading } = useAuth();
   
   if (authLoading) {
@@ -49,19 +56,20 @@ export default function InstructorCohortsPage() {
   return (
     <ProtectedRoute>
       <Flex direction="column" gap="1rem" padding="1rem">
-        <Flex justifyContent="space-between" alignItems="center">
-          <Heading level={2}>Cohort Management</Heading>
-          <Link href="/secure/instructor/dashboard">
-            <Button variation="link">Back to Dashboard</Button>
+        <Flex justifyContent="space-between" alignItems="center" marginBottom="1rem">
+          <Heading level={2}>Provide Feedback</Heading>
+          <Link href={`/secure/instructor/submissions/${id}`}>
+            <Button variation="link">Back to Submission</Button>
           </Link>
         </Flex>
         
-        <Text>
-          Manage your assigned cohorts, view student progress, and track cohort performance.
-          You can create new cohorts, edit existing ones, and view detailed information about each cohort.
-        </Text>
-        
-        <CohortManagement />
+        <FeedbackSubmission 
+          submissionId={id} 
+          onFeedbackSent={() => {
+            // In a real app, we might want to redirect or show a success message
+            console.log('Feedback sent successfully');
+          }}
+        />
       </Flex>
     </ProtectedRoute>
   );

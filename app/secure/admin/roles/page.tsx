@@ -1,8 +1,7 @@
-"use client";
+'use client';
 
 import React from 'react';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
   Card, 
@@ -12,9 +11,10 @@ import {
   Flex, 
   Loader
 } from '@aws-amplify/ui-react';
-import CohortManagement from '../../../../src/components/instructor/CohortManagement';
+import Link from 'next/link';
+import RoleAssignment from '@/components/admin/RoleAssignment';
 
-export default function InstructorCohortsPage() {
+export default function RoleAssignmentPage() {
   const { user, isLoading: authLoading } = useAuth();
   
   if (authLoading) {
@@ -27,10 +27,10 @@ export default function InstructorCohortsPage() {
     );
   }
   
-  // Check if user has instructor role
-  const isInstructor = user?.roles?.includes('instructor');
+  // Check if user has admin role
+  const isAdmin = user?.roles?.includes('admin');
   
-  if (!isInstructor) {
+  if (!isAdmin) {
     return (
       <ProtectedRoute>
         <Card>
@@ -49,19 +49,19 @@ export default function InstructorCohortsPage() {
   return (
     <ProtectedRoute>
       <Flex direction="column" gap="1rem" padding="1rem">
-        <Flex justifyContent="space-between" alignItems="center">
-          <Heading level={2}>Cohort Management</Heading>
-          <Link href="/secure/instructor/dashboard">
+        <Flex justifyContent="space-between" alignItems="center" marginBottom="1rem">
+          <Heading level={2}>Role Assignment</Heading>
+          <Link href="/secure/admin/dashboard">
             <Button variation="link">Back to Dashboard</Button>
           </Link>
         </Flex>
         
         <Text>
-          Manage your assigned cohorts, view student progress, and track cohort performance.
-          You can create new cohorts, edit existing ones, and view detailed information about each cohort.
+          This page allows you to assign roles to users in the system. Roles determine what actions users can perform
+          and what resources they can access. Select a user from the list to view and modify their assigned roles.
         </Text>
         
-        <CohortManagement />
+        <RoleAssignment />
       </Flex>
     </ProtectedRoute>
   );
