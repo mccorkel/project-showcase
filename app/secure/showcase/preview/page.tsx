@@ -55,136 +55,159 @@ export default function ShowcasePreviewPage() {
   };
   
   return (
-    <main className="showcase-preview-page">
-      <div className="page-header">
-        <h1>Showcase Preview</h1>
-        <div className="header-actions">
+    <main className="container mx-auto px-4 py-8 max-w-6xl">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+        <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-4 md:mb-0">Showcase Preview</h1>
+        <div className="flex flex-wrap gap-3">
           <button 
-            className="primary-button"
+            className="py-2 px-4 bg-green-600 hover:bg-green-700 text-white font-medium rounded-md transition-colors"
             onClick={handlePublish}
           >
             Publish Showcase
           </button>
           <Link href="/secure/showcase">
-            <button className="secondary-button">Edit Showcase</button>
+            <button className="py-2 px-4 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white font-medium rounded-md transition-colors">
+              Edit Showcase
+            </button>
           </Link>
         </div>
       </div>
       
       {isLoading ? (
-        <div className="preview-loading">
-          <div className="loading-spinner"></div>
-          <p>Generating preview...</p>
-          <p className="loading-description">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-12 flex flex-col items-center justify-center">
+          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+          <p className="text-lg font-medium text-gray-800 dark:text-white mb-2">Generating preview...</p>
+          <p className="text-gray-600 dark:text-gray-300 text-center max-w-md">
             This may take a few moments as we prepare your showcase preview.
           </p>
         </div>
       ) : (
         <>
-          <div className="preview-info">
-            <div className="preview-expiry">
-              <span className="expiry-label">Preview expires:</span>
-              <span className="expiry-time">
-                {previewExpiry ? formatExpiryTime(previewExpiry) : 'N/A'}
-              </span>
-              <button 
-                className="regenerate-button"
-                onClick={handleRegeneratePreview}
-              >
-                Regenerate Preview
-              </button>
-            </div>
-            <div className="preview-url">
-              <span className="url-label">Preview URL:</span>
-              <span className="url-value">{previewUrl}</span>
-              <button 
-                className="copy-button"
-                onClick={() => navigator.clipboard.writeText(previewUrl)}
-              >
-                Copy URL
-              </button>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h2 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Preview expires:</h2>
+                <div className="flex items-center">
+                  <span className="text-gray-800 dark:text-white font-medium mr-3">
+                    {previewExpiry ? formatExpiryTime(previewExpiry) : 'N/A'}
+                  </span>
+                  <button 
+                    className="text-sm py-1 px-3 bg-blue-100 hover:bg-blue-200 dark:bg-blue-900 dark:hover:bg-blue-800 text-blue-700 dark:text-blue-300 rounded transition-colors"
+                    onClick={handleRegeneratePreview}
+                  >
+                    Regenerate Preview
+                  </button>
+                </div>
+              </div>
+              
+              <div>
+                <h2 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Preview URL:</h2>
+                <div className="flex items-center">
+                  <span className="text-gray-800 dark:text-white font-medium mr-3 truncate">
+                    {previewUrl}
+                  </span>
+                  <button 
+                    className="text-sm py-1 px-3 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded transition-colors"
+                    onClick={() => navigator.clipboard.writeText(previewUrl)}
+                  >
+                    Copy URL
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
           
-          <div className="preview-frame-container">
-            <div className="preview-toolbar">
-              <div className="preview-controls">
-                <button className="control-button">Desktop</button>
-                <button className="control-button">Tablet</button>
-                <button className="control-button">Mobile</button>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden mb-6">
+            <div className="border-b border-gray-200 dark:border-gray-700 p-3 flex justify-between items-center bg-gray-50 dark:bg-gray-900">
+              <div className="flex space-x-2">
+                <button className="py-1 px-3 bg-blue-600 text-white text-sm rounded">Desktop</button>
+                <button className="py-1 px-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm rounded">Tablet</button>
+                <button className="py-1 px-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm rounded">Mobile</button>
               </div>
-              <button className="refresh-button">Refresh</button>
+              <button className="py-1 px-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 text-sm rounded transition-colors">
+                Refresh
+              </button>
             </div>
             
-            <div className="preview-frame">
-              <div className="preview-placeholder">
-                <h2>Showcase Preview</h2>
-                <p>This is a placeholder for your showcase preview.</p>
-                <p>In the actual implementation, an iframe would be displayed here showing your showcase.</p>
+            <div className="p-6 min-h-[500px] bg-gray-50 dark:bg-gray-900">
+              <div className="max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-md p-8">
+                <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4 text-center">Showcase Preview</h2>
+                <p className="text-gray-600 dark:text-gray-300 mb-8 text-center">
+                  This is a placeholder for your showcase preview.
+                </p>
                 
-                <div className="preview-content">
-                  <div className="preview-header">
-                    <div className="preview-profile-image"></div>
-                    <div className="preview-profile-info">
-                      <h3>John Doe</h3>
-                      <p>Full Stack Developer</p>
+                <div className="space-y-8">
+                  <div className="flex flex-col md:flex-row items-center gap-6">
+                    <div className="w-32 h-32 bg-gray-200 dark:bg-gray-700 rounded-full flex-shrink-0"></div>
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-800 dark:text-white">John Doe</h3>
+                      <p className="text-gray-600 dark:text-gray-300">Full Stack Developer</p>
                     </div>
                   </div>
                   
-                  <div className="preview-section">
-                    <h4>About Me</h4>
-                    <p>A passionate developer with experience in web and mobile applications.</p>
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">About Me</h4>
+                    <p className="text-gray-600 dark:text-gray-300">
+                      A passionate developer with experience in web and mobile applications.
+                    </p>
                   </div>
                   
-                  <div className="preview-section">
-                    <h4>Projects</h4>
-                    <div className="preview-projects">
-                      <div className="preview-project">
-                        <h5>JavaScript Game</h5>
-                        <p>An interactive browser game built with vanilla JavaScript.</p>
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-800 dark:text-white mb-3">Projects</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg">
+                        <h5 className="font-medium text-gray-800 dark:text-white mb-1">JavaScript Game</h5>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">An interactive browser game built with vanilla JavaScript.</p>
                       </div>
-                      <div className="preview-project">
-                        <h5>HTML/CSS Portfolio</h5>
-                        <p>A responsive portfolio website built with HTML and CSS.</p>
+                      <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg">
+                        <h5 className="font-medium text-gray-800 dark:text-white mb-1">HTML/CSS Portfolio</h5>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">A responsive portfolio website built with HTML and CSS.</p>
                       </div>
-                      <div className="preview-project">
-                        <h5>React Application</h5>
-                        <p>A full-featured React application with state management.</p>
+                      <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg">
+                        <h5 className="font-medium text-gray-800 dark:text-white mb-1">React Application</h5>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">A full-featured React application with state management.</p>
                       </div>
                     </div>
                   </div>
                   
-                  <div className="preview-section">
-                    <h4>Skills</h4>
-                    <div className="preview-skills">
-                      <span className="preview-skill">JavaScript</span>
-                      <span className="preview-skill">React</span>
-                      <span className="preview-skill">Node.js</span>
-                      <span className="preview-skill">HTML/CSS</span>
-                      <span className="preview-skill">AWS</span>
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-800 dark:text-white mb-3">Skills</h4>
+                    <div className="flex flex-wrap gap-2">
+                      <span className="px-3 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded-full text-sm">JavaScript</span>
+                      <span className="px-3 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded-full text-sm">React</span>
+                      <span className="px-3 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded-full text-sm">Node.js</span>
+                      <span className="px-3 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded-full text-sm">HTML/CSS</span>
+                      <span className="px-3 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded-full text-sm">AWS</span>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
+          
+          <div className="flex flex-wrap justify-between gap-3">
+            <Link href="/secure/dashboard">
+              <button className="py-2 px-4 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white font-medium rounded-md transition-colors">
+                Back to Dashboard
+              </button>
+            </Link>
+            
+            <div className="flex gap-3">
+              <Link href="/secure/showcase">
+                <button className="py-2 px-4 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white font-medium rounded-md transition-colors">
+                  Edit Showcase
+                </button>
+              </Link>
+              <button 
+                className="py-2 px-4 bg-green-600 hover:bg-green-700 text-white font-medium rounded-md transition-colors"
+                onClick={handlePublish}
+              >
+                Publish Showcase
+              </button>
+            </div>
+          </div>
         </>
       )}
-      
-      <div className="page-actions">
-        <button 
-          className="primary-button"
-          onClick={handlePublish}
-        >
-          Publish Showcase
-        </button>
-        <Link href="/secure/showcase">
-          <button className="secondary-button">Edit Showcase</button>
-        </Link>
-        <Link href="/secure/dashboard">
-          <button className="tertiary-button">Back to Dashboard</button>
-        </Link>
-      </div>
     </main>
   );
 } 

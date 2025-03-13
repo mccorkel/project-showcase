@@ -1,24 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Card, 
-  Heading, 
-  Flex, 
-  Divider, 
-  Button, 
-  SelectField,
-  TextField,
-  useTheme,
-  Collection,
-  Badge,
-  Text,
-  View,
-  Image,
-  Loader
-} from '@aws-amplify/ui-react';
 import { generateClient } from 'aws-amplify/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { getSubmissions } from '../../graphql/operations/submissions';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 const client = generateClient();
 
@@ -27,7 +12,6 @@ interface SubmissionsListProps {
 }
 
 const SubmissionsList: React.FC<SubmissionsListProps> = ({ onSelect }) => {
-  const { tokens } = useTheme();
   const { studentProfile } = useAuth();
   const router = useRouter();
   
@@ -141,17 +125,17 @@ const SubmissionsList: React.FC<SubmissionsListProps> = ({ onSelect }) => {
     setFilteredSubmissions(filtered);
   };
 
-  // Get status badge variation based on status
-  const getStatusBadgeVariation = (status: string) => {
+  // Get status badge color based on status
+  const getStatusBadgeColor = (status: string) => {
     switch (status) {
       case 'draft':
-        return 'warning';
+        return 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200';
       case 'submitted':
-        return 'info';
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
       case 'graded':
-        return 'success';
+        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
       default:
-        return 'info';
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
     }
   };
 
@@ -181,157 +165,161 @@ const SubmissionsList: React.FC<SubmissionsListProps> = ({ onSelect }) => {
   };
 
   return (
-    <Card>
-      <Flex justifyContent="space-between" alignItems="center">
-        <Heading level={3}>My Submissions</Heading>
-        <Button
-          variation="primary"
+    <div className="w-full">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 pb-6 border-b border-gray-200 dark:border-gray-700">
+        <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 md:mb-0">My Submissions</h3>
+        <button
+          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition-colors"
           onClick={handleCreateNew}
         >
           Create New Submission
-        </Button>
-      </Flex>
-      <Divider marginBlock={tokens.space.medium} />
+        </button>
+      </div>
       
       {/* Filters */}
-      <Flex direction={{ base: 'column', large: 'row' }} gap={tokens.space.medium} marginBottom={tokens.space.large}>
-        <SelectField
-          label="Status"
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          width={{ base: '100%', large: '20%' }}
-        >
-          <option value="all">All Statuses</option>
-          <option value="draft">Draft</option>
-          <option value="submitted">Submitted</option>
-          <option value="graded">Graded</option>
-        </SelectField>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="w-full">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
+          <select
+            className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            <option value="all">All Statuses</option>
+            <option value="draft">Draft</option>
+            <option value="submitted">Submitted</option>
+            <option value="graded">Graded</option>
+          </select>
+        </div>
         
-        <SelectField
-          label="Week"
-          value={weekFilter}
-          onChange={(e) => setWeekFilter(e.target.value)}
-          width={{ base: '100%', large: '20%' }}
-        >
-          <option value="all">All Weeks</option>
-          {Array.from({ length: 20 }, (_, i) => (
-            <option key={i + 1} value={(i + 1).toString()}>Week {i + 1}</option>
-          ))}
-        </SelectField>
+        <div className="w-full">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Week</label>
+          <select
+            className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            value={weekFilter}
+            onChange={(e) => setWeekFilter(e.target.value)}
+          >
+            <option value="all">All Weeks</option>
+            {Array.from({ length: 20 }, (_, i) => (
+              <option key={i + 1} value={(i + 1).toString()}>Week {i + 1}</option>
+            ))}
+          </select>
+        </div>
         
-        <TextField
-          label="Search"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="Search by title, description, or technology"
-          width={{ base: '100%', large: '40%' }}
-        />
+        <div className="w-full">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Search</label>
+          <input
+            type="text"
+            className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search by title, description, or technology"
+          />
+        </div>
         
-        <SelectField
-          label="Sort By"
-          value={`${sortBy}-${sortDirection}`}
-          onChange={(e) => {
-            const [field, direction] = e.target.value.split('-');
-            setSortBy(field);
-            setSortDirection(direction);
-          }}
-          width={{ base: '100%', large: '20%' }}
-        >
-          <option value="updatedAt-desc">Newest First</option>
-          <option value="updatedAt-asc">Oldest First</option>
-          <option value="title-asc">Title (A-Z)</option>
-          <option value="title-desc">Title (Z-A)</option>
-          <option value="week-asc">Week (Ascending)</option>
-          <option value="week-desc">Week (Descending)</option>
-          <option value="status-asc">Status (A-Z)</option>
-          <option value="status-desc">Status (Z-A)</option>
-        </SelectField>
-      </Flex>
+        <div className="w-full">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Sort By</label>
+          <select
+            className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            value={`${sortBy}-${sortDirection}`}
+            onChange={(e) => {
+              const [field, direction] = e.target.value.split('-');
+              setSortBy(field);
+              setSortDirection(direction);
+            }}
+          >
+            <option value="updatedAt-desc">Newest First</option>
+            <option value="updatedAt-asc">Oldest First</option>
+            <option value="title-asc">Title (A-Z)</option>
+            <option value="title-desc">Title (Z-A)</option>
+            <option value="week-asc">Week (Ascending)</option>
+            <option value="week-desc">Week (Descending)</option>
+            <option value="status-asc">Status (A-Z)</option>
+            <option value="status-desc">Status (Z-A)</option>
+          </select>
+        </div>
+      </div>
       
       {/* Submissions List */}
       {isLoading ? (
-        <Flex justifyContent="center" padding={tokens.space.xl}>
-          <Loader size="large" />
-        </Flex>
+        <div className="flex justify-center items-center py-16">
+          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+        </div>
       ) : filteredSubmissions.length === 0 ? (
-        <Flex direction="column" alignItems="center" padding={tokens.space.xl} gap={tokens.space.medium}>
-          <Text fontSize={tokens.fontSizes.large}>No submissions found</Text>
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <p className="text-xl font-semibold text-gray-800 dark:text-white mb-2">No submissions found</p>
           {submissions.length === 0 ? (
-            <Text>You haven't created any submissions yet.</Text>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">You haven't created any submissions yet.</p>
           ) : (
-            <Text>Try adjusting your filters to see more results.</Text>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">Try adjusting your filters to see more results.</p>
           )}
-          <Button
-            variation="primary"
+          <button
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition-colors"
             onClick={handleCreateNew}
           >
             Create Your First Submission
-          </Button>
-        </Flex>
+          </button>
+        </div>
       ) : (
-        <Collection
-          items={filteredSubmissions}
-          type="list"
-          gap={tokens.space.medium}
-        >
-          {(submission) => (
-            <Card key={submission.id} variation="outlined">
-              <Flex direction={{ base: 'column', large: 'row' }} gap={tokens.space.medium}>
+        <div className="space-y-6">
+          {filteredSubmissions.map((submission) => (
+            <div key={submission.id} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+              <div className="flex flex-col md:flex-row">
                 {/* Featured Image */}
                 {submission.featuredImageUrl && (
-                  <View
-                    width={{ base: '100%', large: '200px' }}
-                    height={{ base: '150px', large: '150px' }}
-                    overflow="hidden"
-                  >
-                    <Image
+                  <div className="w-full md:w-48 h-48 md:h-auto relative">
+                    <img
                       src={submission.featuredImageUrl}
                       alt={submission.title}
-                      objectFit="cover"
-                      width="100%"
-                      height="100%"
+                      className="w-full h-full object-cover"
                     />
-                  </View>
+                  </div>
                 )}
                 
                 {/* Content */}
-                <Flex direction="column" gap={tokens.space.small} flex="1">
-                  <Flex justifyContent="space-between" alignItems="flex-start">
-                    <Heading level={5}>{submission.title}</Heading>
-                    <Badge variation={getStatusBadgeVariation(submission.status)}>
+                <div className="flex-1 p-6">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3">
+                    <h4 className="text-xl font-bold text-gray-900 dark:text-white mb-2 sm:mb-0">{submission.title}</h4>
+                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusBadgeColor(submission.status)}`}>
                       {submission.status.charAt(0).toUpperCase() + submission.status.slice(1)}
-                    </Badge>
-                  </Flex>
+                    </span>
+                  </div>
                   
-                  <Flex gap={tokens.space.xs}>
+                  <div className="flex flex-wrap gap-2 mb-4">
                     {submission.week && (
-                      <Badge variation="info">Week {submission.week}</Badge>
+                      <span className="px-3 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded-full text-sm">
+                        Week {submission.week}
+                      </span>
                     )}
                     {submission.technologies && submission.technologies.map((tech: string, index: number) => (
-                      <Badge key={index} variation="info">{tech}</Badge>
+                      <span key={index} className="px-3 py-1 bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200 rounded-full text-sm">
+                        {tech}
+                      </span>
                     ))}
-                  </Flex>
+                  </div>
                   
-                  <Text>{submission.description?.substring(0, 150)}...</Text>
+                  <p className="text-gray-700 dark:text-gray-300 mb-6 line-clamp-2">
+                    {submission.description || 'No description provided.'}
+                  </p>
                   
-                  <Flex justifyContent="space-between" alignItems="center">
-                    <Text fontSize={tokens.fontSizes.small} color={tokens.colors.neutral[60]}>
-                      Last updated: {formatDate(submission.lastStudentEdit || submission.updatedAt)}
-                    </Text>
-                    <Button
-                      variation="primary"
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-3 sm:mb-0">
+                      Last updated: <span className="font-medium">{formatDate(submission.lastStudentEdit || submission.updatedAt)}</span>
+                    </p>
+                    <button
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition-colors"
                       onClick={() => handleEdit(submission.id)}
                     >
                       View Details
-                    </Button>
-                  </Flex>
-                </Flex>
-              </Flex>
-            </Card>
-          )}
-        </Collection>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       )}
-    </Card>
+    </div>
   );
 };
 

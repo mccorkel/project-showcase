@@ -41,4 +41,7 @@ amplify_outputs*
 amplifyconfiguration*
 
 students.json
+students.json.copy
 submissions.json
+submissions.json.copy
+user_credentials.json

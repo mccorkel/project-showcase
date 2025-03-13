@@ -20,7 +20,8 @@ const schema = a.schema({
     security: a.json() // Security-related information (MFA, login attempts, etc.)
   })
   .authorization(allow => [
-    allow.owner()
+    allow.owner(),
+    allow.publicApiKey().to(['read', 'create', 'update', 'delete'])
   ])
   .secondaryIndexes(index => [
     index('cognitoId'),
@@ -41,7 +42,8 @@ const schema = a.schema({
     originalRequestUrl: a.string()
   })
   .authorization(allow => [
-    allow.owner()
+    allow.owner(),
+    allow.publicApiKey().to(['read', 'create', 'update', 'delete'])
   ])
   .secondaryIndexes(index => [
     index('cognitoUserId')
@@ -61,7 +63,8 @@ const schema = a.schema({
     revokedBy: a.string()
   })
   .authorization(allow => [
-    allow.owner()
+    allow.owner(),
+    allow.publicApiKey().to(['read', 'create', 'update', 'delete'])
   ])
   .secondaryIndexes(index => [
     index('delegatorId'),
@@ -80,7 +83,8 @@ const schema = a.schema({
     details: a.json()
   })
   .authorization(allow => [
-    allow.authenticated()
+    allow.authenticated(),
+    allow.publicApiKey().to(['read', 'create', 'update', 'delete'])
   ])
   .secondaryIndexes(index => [
     index('cognitoUserId'),
@@ -111,7 +115,8 @@ const schema = a.schema({
     orgName: a.string()
   })
   .authorization(allow => [
-    allow.owner()
+    allow.owner(),
+    allow.publicApiKey().to(['read', 'create', 'update', 'delete'])
   ])
   .secondaryIndexes(index => [
     index('userId'),
@@ -132,7 +137,8 @@ const schema = a.schema({
     contactInfo: a.json() // Contact information including office hours
   })
   .authorization(allow => [
-    allow.owner()
+    allow.owner(),
+    allow.publicApiKey().to(['read', 'create', 'update', 'delete'])
   ])
   .secondaryIndexes(index => [
     index('userId')
@@ -152,7 +158,7 @@ const schema = a.schema({
   })
   .authorization(allow => [
     allow.authenticated(),
-    allow.publicApiKey().to(['read'])
+    allow.publicApiKey().to(['read', 'create', 'update', 'delete'])
   ])
   .secondaryIndexes(index => [
     index('status')
@@ -188,7 +194,8 @@ const schema = a.schema({
     editHistory: a.json().array()
   })
   .authorization(allow => [
-    allow.owner()
+    allow.owner(),
+    allow.publicApiKey().to(['read', 'create', 'update', 'delete'])
   ])
   .secondaryIndexes(index => [
     index('studentProfileId'),
@@ -209,7 +216,7 @@ const schema = a.schema({
   })
   .authorization(allow => [
     allow.authenticated(),
-    allow.publicApiKey().to(['read'])
+    allow.publicApiKey().to(['read', 'create', 'update', 'delete'])
   ]),
 
   // Student showcase
@@ -232,7 +239,7 @@ const schema = a.schema({
   })
   .authorization(allow => [
     allow.owner(),
-    allow.publicApiKey().to(['read'])
+    allow.publicApiKey().to(['read', 'create', 'update', 'delete'])
   ])
   .secondaryIndexes(index => [
     index('studentProfileId'),
@@ -251,7 +258,8 @@ const schema = a.schema({
     devices: a.json().array()
   })
   .authorization(allow => [
-    allow.owner()
+    allow.owner(),
+    allow.publicApiKey().to(['read', 'create', 'update', 'delete'])
   ])
   .secondaryIndexes(index => [
     index('showcaseId'),
