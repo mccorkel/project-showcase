@@ -1,23 +1,37 @@
+'use client';
+
 import React, { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { fetchAuthSession, getCurrentUser } from 'aws-amplify/auth';
+import { UserRole } from '@/utils/security/fieldAccessControl';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requiredRoles?: string[];
+  requiredRoles?: UserRole[];
+  redirectPath?: string;
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children,
   requiredRoles = [],
+  redirectPath = '/login',
 }) => {
   const router = useRouter();
   const pathname = usePathname();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [userRoles, setUserRoles] = useState<string[]>([]);
+  const [userRoles, setUserRoles] = useState<UserRole[]>([]);
+  const [isClient, setIsClient] = useState(false);
+
+  // This effect runs only on the client side
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   useEffect(() => {
+    // Skip authentication check during SSR
+    if (!isClient) return;
+
     const checkAuth = async () => {
       try {
         // Check if user is authenticated
@@ -29,45 +43,41 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         // For now, we'll assume all authenticated users have the 'user' role
         // In a real application, you would fetch the user's roles from your database
         // or from custom attributes in the user's profile
-        setUserRoles(['user']);
+        setUserRoles([UserRole.STUDENT]); // Default role
         
         setIsLoading(false);
       } catch (error) {
         console.error('Authentication error:', error);
         setIsAuthenticated(false);
         setIsLoading(false);
-        router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
+        router.push(`${redirectPath}?redirect=${encodeURIComponent(pathname)}`);
       }
     };
 
     checkAuth();
-  }, [router, pathname]);
+  }, [router, pathname, redirectPath, isClient]);
 
   // Check if user has required roles
   const hasRequiredRoles = () => {
     if (requiredRoles.length === 0) return true;
     
-    // If 'user' role is sufficient, allow access
-    if (requiredRoles.includes('user') && userRoles.includes('user')) {
-      return true;
-    }
-    
-    // For more specific roles, you would implement your custom logic here
-    // This is a placeholder for your application's role-checking logic
-    return false;
+    // Check if the user has any of the required roles
+    return requiredRoles.some(role => userRoles.includes(role));
   };
 
-  if (isLoading) {
-    return <div>Loading...</div>;
+  // During SSR or when not yet loaded on client, render children without protection
+  if (!isClient || isLoading) {
+    return <>{children}</>;
   }
 
+  // Client-side protection
   if (!isAuthenticated) {
-    router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
+    router.push(`${redirectPath}?redirect=${encodeURIComponent(pathname)}`);
     return null;
   }
 
   if (requiredRoles.length > 0 && !hasRequiredRoles()) {
-    router.push('/403');
+    router.push('/access-denied');
     return null;
   }
 

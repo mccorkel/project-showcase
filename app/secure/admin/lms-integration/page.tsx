@@ -1,472 +1,264 @@
 'use client';
 
-import React, { useState } from 'react';
-import ProtectedRoute from '@/components/ProtectedRoute';
+import React from 'react';
+import { Card, Heading, Text, Flex, Divider, Button, SelectField, TextField, Table, TableCell, TableBody, TableHead, TableRow, Badge, Pagination, SwitchField, Alert } from '@aws-amplify/ui-react';
 import Link from 'next/link';
+import { UserRole } from '@/utils/security/fieldAccessControl';
 
-// Mock data for LMS integration
-const mockData = {
-  integrations: [
-    {
-      id: 'lms1',
-      name: 'Canvas LMS',
-      status: 'active',
-      last_sync: '2023-10-15T08:30:00Z',
-      api_endpoint: 'https://canvas.instructure.com/api/v1',
-      api_key: '••••••••••••••••••••••••••••••',
-      sync_frequency: 'daily',
-      sync_schedule: '02:00 AM',
-      entities_synced: ['students', 'instructors', 'courses', 'assignments', 'submissions'],
-      sync_stats: {
-        students: 120,
-        instructors: 8,
-        courses: 12,
-        assignments: 86,
-        submissions: 1240
-      }
-    },
-    {
-      id: 'lms2',
-      name: 'Moodle',
-      status: 'inactive',
-      last_sync: '2023-09-30T10:15:00Z',
-      api_endpoint: 'https://moodle.example.com/webservice/rest/server.php',
-      api_key: '••••••••••••••••••••••••••••••',
-      sync_frequency: 'manual',
-      sync_schedule: null,
-      entities_synced: ['students', 'instructors', 'courses'],
-      sync_stats: {
-        students: 45,
-        instructors: 3,
-        courses: 5,
-        assignments: 0,
-        submissions: 0
-      }
-    }
-  ],
-  sync_history: [
-    {
-      id: 'sync1',
-      integration_id: 'lms1',
-      integration_name: 'Canvas LMS',
-      started_at: '2023-10-15T02:00:00Z',
-      completed_at: '2023-10-15T02:15:23Z',
-      status: 'success',
-      entities_synced: {
-        students: 120,
-        instructors: 8,
-        courses: 12,
-        assignments: 86,
-        submissions: 42
-      },
-      errors: []
-    },
-    {
-      id: 'sync2',
-      integration_id: 'lms1',
-      integration_name: 'Canvas LMS',
-      started_at: '2023-10-14T02:00:00Z',
-      completed_at: '2023-10-14T02:14:45Z',
-      status: 'success',
-      entities_synced: {
-        students: 120,
-        instructors: 8,
-        courses: 12,
-        assignments: 86,
-        submissions: 38
-      },
-      errors: []
-    },
-    {
-      id: 'sync3',
-      integration_id: 'lms1',
-      integration_name: 'Canvas LMS',
-      started_at: '2023-10-13T02:00:00Z',
-      completed_at: '2023-10-13T02:18:12Z',
-      status: 'partial',
-      entities_synced: {
-        students: 118,
-        instructors: 8,
-        courses: 12,
-        assignments: 84,
-        submissions: 35
-      },
-      errors: [
-        'Failed to sync 2 student records due to missing email addresses',
-        'Failed to sync 2 assignments due to API timeout'
-      ]
-    },
-    {
-      id: 'sync4',
-      integration_id: 'lms2',
-      integration_name: 'Moodle',
-      started_at: '2023-09-30T10:00:00Z',
-      completed_at: '2023-09-30T10:15:00Z',
-      status: 'success',
-      entities_synced: {
-        students: 45,
-        instructors: 3,
-        courses: 5,
-        assignments: 0,
-        submissions: 0
-      },
-      errors: []
-    }
-  ],
-  available_lms: [
-    {
-      id: 'canvas',
-      name: 'Canvas LMS',
-      logo: 'https://via.placeholder.com/100x50?text=Canvas',
-      description: 'Integrate with Canvas LMS to sync students, instructors, courses, assignments, and submissions.'
-    },
-    {
-      id: 'moodle',
-      name: 'Moodle',
-      logo: 'https://via.placeholder.com/100x50?text=Moodle',
-      description: 'Integrate with Moodle to sync students, instructors, and courses.'
-    },
-    {
-      id: 'blackboard',
-      name: 'Blackboard Learn',
-      logo: 'https://via.placeholder.com/100x50?text=Blackboard',
-      description: 'Integrate with Blackboard Learn to sync students, instructors, courses, and assignments.'
-    },
-    {
-      id: 'brightspace',
-      name: 'D2L Brightspace',
-      logo: 'https://via.placeholder.com/100x50?text=Brightspace',
-      description: 'Integrate with D2L Brightspace to sync students, instructors, courses, and assignments.'
-    }
-  ]
+const LMSIntegrationPage = () => {
+  return (
+    <Flex direction="column" gap="1rem">
+      <Heading level={2}>LMS Integration</Heading>
+      <Text>Configure integration with Learning Management Systems and import student data.</Text>
+      
+      <Link href="/secure/admin/dashboard" className="back-link">
+        ← Back to Dashboard
+      </Link>
+      
+      <Card>
+        <Heading level={3}>LMS Connection Settings</Heading>
+        <Divider />
+        <Flex direction="column" gap="1rem" padding="1rem">
+          <SelectField
+            label="LMS Provider"
+            descriptiveText="Select your Learning Management System provider"
+          >
+            <option value="canvas">Canvas</option>
+            <option value="blackboard">Blackboard</option>
+            <option value="moodle">Moodle</option>
+            <option value="brightspace">Brightspace (D2L)</option>
+            <option value="custom">Custom API</option>
+          </SelectField>
+          
+          <TextField
+            label="API Base URL"
+            placeholder="https://your-lms-instance.instructure.com/api/v1"
+            descriptiveText="Base URL for the LMS API"
+          />
+          
+          <TextField
+            label="API Key"
+            type="password"
+            placeholder="Enter your LMS API key"
+            descriptiveText="API key or token for authentication"
+          />
+          
+          <SwitchField
+            label="Use OAuth"
+            labelPosition="end"
+            defaultChecked={false}
+            descriptiveText="Use OAuth 2.0 for authentication instead of API key"
+          />
+          
+          <Flex justifyContent="flex-end" gap="1rem">
+            <Button variation="link">Test Connection</Button>
+            <Button variation="primary">Save Connection</Button>
+          </Flex>
+        </Flex>
+      </Card>
+      
+      <Card>
+        <Heading level={3}>Import Student Data</Heading>
+        <Divider />
+        <Flex direction="column" gap="1rem" padding="1rem">
+          <SelectField
+            label="Course/Cohort"
+            descriptiveText="Select the course or cohort to import"
+          >
+            <option value="">Select a course...</option>
+            <option value="course-1">Web Development Cohort 1</option>
+            <option value="course-2">Data Science Cohort 2</option>
+            <option value="course-3">UX Design Cohort 1</option>
+          </SelectField>
+          
+          <Flex direction="column" gap="0.5rem">
+            <Text fontWeight="bold">Data to Import</Text>
+            <Flex gap="1rem" wrap="wrap">
+              <SwitchField
+                label="Student Profiles"
+                labelPosition="end"
+                defaultChecked={true}
+              />
+              <SwitchField
+                label="Submissions"
+                labelPosition="end"
+                defaultChecked={true}
+              />
+              <SwitchField
+                label="Grades"
+                labelPosition="end"
+                defaultChecked={true}
+              />
+              <SwitchField
+                label="Feedback"
+                labelPosition="end"
+                defaultChecked={true}
+              />
+            </Flex>
+          </Flex>
+          
+          <SelectField
+            label="Import Strategy"
+            descriptiveText="How to handle existing data"
+          >
+            <option value="merge">Merge (Update existing, add new)</option>
+            <option value="overwrite">Overwrite (Replace existing data)</option>
+            <option value="skip">Skip (Only add new data)</option>
+          </SelectField>
+          
+          <Flex justifyContent="flex-end" gap="1rem">
+            <Button variation="primary">Start Import</Button>
+          </Flex>
+        </Flex>
+      </Card>
+      
+      <Card>
+        <Heading level={3}>Import History</Heading>
+        <Divider />
+        <Table highlightOnHover={true}>
+          <TableHead>
+            <TableRow>
+              <TableCell as="th">Date</TableCell>
+              <TableCell as="th">Course/Cohort</TableCell>
+              <TableCell as="th">Data Types</TableCell>
+              <TableCell as="th">Records</TableCell>
+              <TableCell as="th">Status</TableCell>
+              <TableCell as="th">Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            <TableRow>
+              <TableCell>2025-01-15 09:30 AM</TableCell>
+              <TableCell>Web Development Cohort 1</TableCell>
+              <TableCell>Profiles, Submissions</TableCell>
+              <TableCell>24 students, 96 submissions</TableCell>
+              <TableCell>
+                <Badge variation="success">Completed</Badge>
+              </TableCell>
+              <TableCell>
+                <Button size="small">View Details</Button>
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell>2025-01-10 02:15 PM</TableCell>
+              <TableCell>Data Science Cohort 2</TableCell>
+              <TableCell>Profiles, Submissions, Grades</TableCell>
+              <TableCell>18 students, 72 submissions</TableCell>
+              <TableCell>
+                <Badge variation="success">Completed</Badge>
+              </TableCell>
+              <TableCell>
+                <Button size="small">View Details</Button>
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell>2025-01-05 11:45 AM</TableCell>
+              <TableCell>UX Design Cohort 1</TableCell>
+              <TableCell>Profiles, Submissions</TableCell>
+              <TableCell>15 students, 45 submissions</TableCell>
+              <TableCell>
+                <Badge variation="warning">Partial</Badge>
+              </TableCell>
+              <TableCell>
+                <Button size="small">View Details</Button>
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+        <Flex justifyContent="center" padding="1rem">
+          <Pagination currentPage={1} totalPages={3} siblingCount={1} />
+        </Flex>
+      </Card>
+      
+      <Card>
+        <Heading level={3}>Conflict Resolution</Heading>
+        <Divider />
+        <Flex direction="column" gap="1rem" padding="1rem">
+          <Alert variation="warning" heading="3 Conflicts Pending Resolution">
+            There are 3 data conflicts from the last import that require manual resolution.
+          </Alert>
+          
+          <Table highlightOnHover={true}>
+            <TableHead>
+              <TableRow>
+                <TableCell as="th">Student</TableCell>
+                <TableCell as="th">Data Type</TableCell>
+                <TableCell as="th">Conflict Type</TableCell>
+                <TableCell as="th">Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              <TableRow>
+                <TableCell>John Smith</TableCell>
+                <TableCell>Profile</TableCell>
+                <TableCell>Email mismatch</TableCell>
+                <TableCell>
+                  <Flex gap="0.5rem">
+                    <Button size="small" variation="primary">Resolve</Button>
+                  </Flex>
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>Maria Garcia</TableCell>
+                <TableCell>Submission</TableCell>
+                <TableCell>Duplicate submission</TableCell>
+                <TableCell>
+                  <Flex gap="0.5rem">
+                    <Button size="small" variation="primary">Resolve</Button>
+                  </Flex>
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>David Johnson</TableCell>
+                <TableCell>Grade</TableCell>
+                <TableCell>Grade discrepancy</TableCell>
+                <TableCell>
+                  <Flex gap="0.5rem">
+                    <Button size="small" variation="primary">Resolve</Button>
+                  </Flex>
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </Flex>
+      </Card>
+      
+      <Card>
+        <Heading level={3}>Scheduled Imports</Heading>
+        <Divider />
+        <Flex direction="column" gap="1rem" padding="1rem">
+          <SwitchField
+            label="Enable Scheduled Imports"
+            labelPosition="end"
+            defaultChecked={false}
+            descriptiveText="Automatically import data on a schedule"
+          />
+          
+          <SelectField
+            label="Frequency"
+            descriptiveText="How often to import data"
+            isDisabled={true}
+          >
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+          </SelectField>
+          
+          <TextField
+            label="Time of Day"
+            type="time"
+            defaultValue="00:00"
+            descriptiveText="When to run the import (24-hour format)"
+            isDisabled={true}
+          />
+          
+          <Flex justifyContent="flex-end" gap="1rem">
+            <Button variation="primary" isDisabled={true}>Save Schedule</Button>
+          </Flex>
+        </Flex>
+      </Card>
+    </Flex>
+  );
 };
 
-export default function AdminLMSIntegrationPage() {
-  const [activeTab, setActiveTab] = useState('integrations');
-  const [selectedIntegration, setSelectedIntegration] = useState(mockData.integrations[0]?.id || '');
-  
-  // Format datetime for display
-  const formatDateTime = (dateString: string) => {
-    if (!dateString) return 'Never';
-    
-    const date = new Date(dateString);
-    return date.toLocaleString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    });
-  };
-  
-  // Get the selected integration
-  const integration = mockData.integrations.find(i => i.id === selectedIntegration);
-  
-  // Filter sync history for the selected integration
-  const filteredSyncHistory = selectedIntegration 
-    ? mockData.sync_history.filter(sync => sync.integration_id === selectedIntegration)
-    : mockData.sync_history;
-  
-  return (
-    <ProtectedRoute requiredRoles={['admin']}>
-      <main className="admin-lms-integration-page">
-        <div className="page-header">
-          <h1>LMS Integration</h1>
-          <p className="page-description">
-            Configure and manage integrations with external Learning Management Systems.
-          </p>
-          <div className="header-actions">
-            <button className="add-integration-button">Add New Integration</button>
-          </div>
-        </div>
-        
-        <div className="tab-navigation">
-          <button 
-            className={`tab-button ${activeTab === 'integrations' ? 'active' : ''}`}
-            onClick={() => setActiveTab('integrations')}
-          >
-            Integrations
-          </button>
-          <button 
-            className={`tab-button ${activeTab === 'sync-history' ? 'active' : ''}`}
-            onClick={() => setActiveTab('sync-history')}
-          >
-            Sync History
-          </button>
-          <button 
-            className={`tab-button ${activeTab === 'settings' ? 'active' : ''}`}
-            onClick={() => setActiveTab('settings')}
-          >
-            Settings
-          </button>
-        </div>
-        
-        <div className="tab-content">
-          {activeTab === 'integrations' && (
-            <div className="integrations-tab">
-              <div className="integrations-list">
-                {mockData.integrations.length === 0 ? (
-                  <div className="empty-state">
-                    <p>No LMS integrations configured.</p>
-                    <button className="add-integration-button">Add New Integration</button>
-                  </div>
-                ) : (
-                  mockData.integrations.map(integration => (
-                    <div 
-                      key={integration.id} 
-                      className={`integration-card ${integration.status} ${selectedIntegration === integration.id ? 'selected' : ''}`}
-                      onClick={() => setSelectedIntegration(integration.id)}
-                    >
-                      <div className="integration-header">
-                        <h2>{integration.name}</h2>
-                        <span className={`status-badge status-${integration.status}`}>
-                          {integration.status.charAt(0).toUpperCase() + integration.status.slice(1)}
-                        </span>
-                      </div>
-                      <div className="integration-details">
-                        <div className="detail-item">
-                          <span className="label">Last Sync:</span>
-                          <span className="value">{formatDateTime(integration.last_sync)}</span>
-                        </div>
-                        <div className="detail-item">
-                          <span className="label">Sync Frequency:</span>
-                          <span className="value">{integration.sync_frequency.charAt(0).toUpperCase() + integration.sync_frequency.slice(1)}</span>
-                        </div>
-                        <div className="detail-item">
-                          <span className="label">Entities Synced:</span>
-                          <span className="value">{integration.entities_synced.length}</span>
-                        </div>
-                      </div>
-                      <div className="integration-actions">
-                        <button className="edit-button">Edit</button>
-                        <button className="sync-now-button">Sync Now</button>
-                        {integration.status === 'active' ? (
-                          <button className="deactivate-button">Deactivate</button>
-                        ) : (
-                          <button className="activate-button">Activate</button>
-                        )}
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-              
-              {integration && (
-                <div className="integration-details-panel">
-                  <h2>Integration Details</h2>
-                  
-                  <div className="details-section">
-                    <h3>Configuration</h3>
-                    <div className="detail-group">
-                      <div className="detail-item">
-                        <span className="label">API Endpoint:</span>
-                        <span className="value">{integration.api_endpoint}</span>
-                      </div>
-                      <div className="detail-item">
-                        <span className="label">API Key:</span>
-                        <span className="value">{integration.api_key}</span>
-                        <button className="show-key-button">Show</button>
-                      </div>
-                      <div className="detail-item">
-                        <span className="label">Sync Frequency:</span>
-                        <span className="value">{integration.sync_frequency.charAt(0).toUpperCase() + integration.sync_frequency.slice(1)}</span>
-                      </div>
-                      {integration.sync_schedule && (
-                        <div className="detail-item">
-                          <span className="label">Sync Schedule:</span>
-                          <span className="value">{integration.sync_schedule}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div className="details-section">
-                    <h3>Entities Synced</h3>
-                    <div className="entities-list">
-                      {integration.entities_synced.map(entity => (
-                        <div key={entity} className="entity-item">
-                          <span className="entity-name">{entity.charAt(0).toUpperCase() + entity.slice(1)}</span>
-                          <span className="entity-count">{integration.sync_stats[entity as keyof typeof integration.sync_stats]}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <div className="details-section">
-                    <h3>Recent Syncs</h3>
-                    <div className="recent-syncs">
-                      {filteredSyncHistory.slice(0, 3).map(sync => (
-                        <div key={sync.id} className={`sync-item status-${sync.status}`}>
-                          <div className="sync-header">
-                            <span className="sync-date">{formatDateTime(sync.started_at)}</span>
-                            <span className={`sync-status status-${sync.status}`}>
-                              {sync.status.charAt(0).toUpperCase() + sync.status.slice(1)}
-                            </span>
-                          </div>
-                          <div className="sync-details">
-                            <span className="sync-duration">
-                              Duration: {
-                                Math.round((new Date(sync.completed_at).getTime() - new Date(sync.started_at).getTime()) / 1000 / 60)
-                              } minutes
-                            </span>
-                            <span className="entities-synced">
-                              {Object.values(sync.entities_synced).reduce((a, b) => a + b, 0)} entities synced
-                            </span>
-                          </div>
-                          {sync.errors.length > 0 && (
-                            <div className="sync-errors">
-                              <span className="error-count">{sync.errors.length} errors</span>
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <div className="details-actions">
-                    <button className="edit-button">Edit Integration</button>
-                    <button className="sync-now-button">Sync Now</button>
-                    <button className="view-logs-button">View Logs</button>
-                    <button className="delete-button">Delete Integration</button>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-          
-          {activeTab === 'sync-history' && (
-            <div className="sync-history-tab">
-              <div className="filter-options">
-                <div className="filter-group">
-                  <label htmlFor="integration-select">Integration:</label>
-                  <select 
-                    id="integration-select"
-                    value={selectedIntegration}
-                    onChange={(e) => setSelectedIntegration(e.target.value)}
-                    className="filter-select"
-                  >
-                    <option value="">All Integrations</option>
-                    {mockData.integrations.map(integration => (
-                      <option key={integration.id} value={integration.id}>{integration.name}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              
-              <div className="sync-history-list">
-                <div className="list-header">
-                  <div className="col-integration">Integration</div>
-                  <div className="col-started">Started</div>
-                  <div className="col-completed">Completed</div>
-                  <div className="col-duration">Duration</div>
-                  <div className="col-status">Status</div>
-                  <div className="col-entities">Entities Synced</div>
-                  <div className="col-actions">Actions</div>
-                </div>
-                
-                <div className="list-body">
-                  {filteredSyncHistory.map(sync => (
-                    <div key={sync.id} className={`list-row status-${sync.status}`}>
-                      <div className="col-integration">{sync.integration_name}</div>
-                      <div className="col-started">{formatDateTime(sync.started_at)}</div>
-                      <div className="col-completed">{formatDateTime(sync.completed_at)}</div>
-                      <div className="col-duration">
-                        {Math.round((new Date(sync.completed_at).getTime() - new Date(sync.started_at).getTime()) / 1000 / 60)} min
-                      </div>
-                      <div className="col-status">
-                        <span className={`status-badge status-${sync.status}`}>
-                          {sync.status.charAt(0).toUpperCase() + sync.status.slice(1)}
-                        </span>
-                      </div>
-                      <div className="col-entities">
-                        {Object.values(sync.entities_synced).reduce((a, b) => a + b, 0)}
-                      </div>
-                      <div className="col-actions">
-                        <button className="view-details-button">View Details</button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-          
-          {activeTab === 'settings' && (
-            <div className="settings-tab">
-              <div className="settings-section">
-                <h2>Global Settings</h2>
-                <form className="settings-form">
-                  <div className="form-group">
-                    <label htmlFor="default-sync-frequency">Default Sync Frequency:</label>
-                    <select id="default-sync-frequency" className="form-select">
-                      <option value="hourly">Hourly</option>
-                      <option value="daily" selected>Daily</option>
-                      <option value="weekly">Weekly</option>
-                      <option value="manual">Manual</option>
-                    </select>
-                  </div>
-                  
-                  <div className="form-group">
-                    <label htmlFor="default-sync-time">Default Sync Time:</label>
-                    <input type="time" id="default-sync-time" defaultValue="02:00" className="form-input" />
-                  </div>
-                  
-                  <div className="form-group">
-                    <label htmlFor="sync-timeout">Sync Timeout (minutes):</label>
-                    <input type="number" id="sync-timeout" defaultValue="30" min="5" max="120" className="form-input" />
-                  </div>
-                  
-                  <div className="form-group">
-                    <label htmlFor="error-notification-email">Error Notification Email:</label>
-                    <input type="email" id="error-notification-email" defaultValue="admin@example.com" className="form-input" />
-                  </div>
-                  
-                  <div className="form-group checkbox-group">
-                    <label>
-                      <input type="checkbox" defaultChecked /> 
-                      Send email notifications for failed syncs
-                    </label>
-                  </div>
-                  
-                  <div className="form-group checkbox-group">
-                    <label>
-                      <input type="checkbox" defaultChecked /> 
-                      Auto-retry failed syncs (up to 3 times)
-                    </label>
-                  </div>
-                  
-                  <div className="form-actions">
-                    <button type="submit" className="save-button">Save Settings</button>
-                    <button type="button" className="reset-button">Reset to Defaults</button>
-                  </div>
-                </form>
-              </div>
-              
-              <div className="settings-section">
-                <h2>Available LMS Integrations</h2>
-                <div className="available-lms-list">
-                  {mockData.available_lms.map(lms => (
-                    <div key={lms.id} className="lms-card">
-                      <div className="lms-logo">
-                        <img src={lms.logo} alt={lms.name} />
-                      </div>
-                      <div className="lms-info">
-                        <h3>{lms.name}</h3>
-                        <p>{lms.description}</p>
-                      </div>
-                      <div className="lms-actions">
-                        <button className="setup-button">Set Up</button>
-                        <button className="docs-button">Documentation</button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </main>
-    </ProtectedRoute>
-  );
-} 
+export default LMSIntegrationPage; 

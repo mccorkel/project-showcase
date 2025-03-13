@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import ProtectedRoute from '@/components/ProtectedRoute';
 import Link from 'next/link';
+import { UserRole } from '@/utils/security/fieldAccessControl';
 
 // Mock data for instructor management
 const mockData = {
@@ -112,128 +112,126 @@ export default function AdminInstructorManagementPage() {
   });
   
   return (
-    <ProtectedRoute requiredRoles={['admin']}>
-      <main className="admin-instructor-management-page">
-        <div className="page-header">
-          <h1>Instructor Management</h1>
-          <p className="page-description">
-            View and manage all instructors in the system.
-          </p>
-          <div className="header-actions">
-            <button className="create-button">Create New Instructor</button>
-            <button className="import-button">Import Instructors</button>
-          </div>
+    <main className="admin-instructor-management-page">
+      <div className="page-header">
+        <h1>Instructor Management</h1>
+        <p className="page-description">
+          View and manage all instructors in the system.
+        </p>
+        <div className="header-actions">
+          <button className="create-button">Create New Instructor</button>
+          <button className="import-button">Import Instructors</button>
+        </div>
+      </div>
+      
+      <div className="filters-section">
+        <div className="search-bar">
+          <input 
+            type="text" 
+            placeholder="Search by name or email..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="search-input"
+          />
         </div>
         
-        <div className="filters-section">
-          <div className="search-bar">
-            <input 
-              type="text" 
-              placeholder="Search by name or email..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="search-input"
-            />
-          </div>
-          
-          <div className="filter-options">
-            <div className="filter-group">
-              <label htmlFor="specialization-select">Specialization:</label>
-              <select 
-                id="specialization-select"
-                value={selectedSpecialization}
-                onChange={(e) => setSelectedSpecialization(e.target.value)}
-                className="filter-select"
-              >
-                <option value="all">All Specializations</option>
-                {mockData.specializations.map((specialization, index) => (
-                  <option key={index} value={specialization}>{specialization}</option>
-                ))}
-              </select>
-            </div>
-            
-            <div className="filter-group">
-              <label htmlFor="status-select">Status:</label>
-              <select 
-                id="status-select"
-                value={selectedStatus}
-                onChange={(e) => setSelectedStatus(e.target.value)}
-                className="filter-select"
-              >
-                <option value="all">All Statuses</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
-            </div>
-          </div>
-        </div>
-        
-        <div className="instructors-table">
-          <div className="table-header">
-            <div className="col-name">Name</div>
-            <div className="col-email">Email</div>
-            <div className="col-specialization">Specialization</div>
-            <div className="col-status">Status</div>
-            <div className="col-cohorts">Assigned Cohorts</div>
-            <div className="col-students">Students</div>
-            <div className="col-joined">Joined</div>
-            <div className="col-activity">Last Active</div>
-            <div className="col-actions">Actions</div>
-          </div>
-          
-          {filteredInstructors.length === 0 ? (
-            <div className="empty-state">
-              <p>No instructors found matching your criteria.</p>
-            </div>
-          ) : (
-            <div className="table-body">
-              {filteredInstructors.map(instructor => (
-                <div key={instructor.id} className="table-row">
-                  <div className="col-name">{instructor.name}</div>
-                  <div className="col-email">{instructor.email}</div>
-                  <div className="col-specialization">{instructor.specialization}</div>
-                  <div className="col-status">
-                    <span className={`status-badge status-${instructor.status}`}>
-                      {instructor.status.charAt(0).toUpperCase() + instructor.status.slice(1)}
-                    </span>
-                  </div>
-                  <div className="col-cohorts">
-                    {instructor.assignedCohorts.length > 0 ? (
-                      <span>{instructor.assignedCohorts.length} cohort(s)</span>
-                    ) : (
-                      <span className="no-cohorts">None</span>
-                    )}
-                  </div>
-                  <div className="col-students">{instructor.totalStudents}</div>
-                  <div className="col-joined">{formatDate(instructor.joinDate)}</div>
-                  <div className="col-activity">{formatDateTime(instructor.lastActive)}</div>
-                  <div className="col-actions">
-                    <Link href={`/secure/admin/instructors/${instructor.id}`}>
-                      <button className="view-button">View</button>
-                    </Link>
-                    <button className="edit-button">Edit</button>
-                  </div>
-                </div>
+        <div className="filter-options">
+          <div className="filter-group">
+            <label htmlFor="specialization-select">Specialization:</label>
+            <select 
+              id="specialization-select"
+              value={selectedSpecialization}
+              onChange={(e) => setSelectedSpecialization(e.target.value)}
+              className="filter-select"
+            >
+              <option value="all">All Specializations</option>
+              {mockData.specializations.map((specialization, index) => (
+                <option key={index} value={specialization}>{specialization}</option>
               ))}
-            </div>
-          )}
-        </div>
-        
-        <div className="pagination">
-          <button className="pagination-button" disabled>Previous</button>
-          <span className="pagination-info">Page 1 of 1</span>
-          <button className="pagination-button" disabled>Next</button>
-        </div>
-        
-        <div className="bulk-actions">
-          <h3>Bulk Actions</h3>
-          <div className="action-buttons">
-            <button className="bulk-action-button" disabled>Assign to Cohort</button>
-            <button className="bulk-action-button" disabled>Change Status</button>
-            <button className="bulk-action-button" disabled>Export Selected</button>
+            </select>
+          </div>
+          
+          <div className="filter-group">
+            <label htmlFor="status-select">Status:</label>
+            <select 
+              id="status-select"
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+              className="filter-select"
+            >
+              <option value="all">All Statuses</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
           </div>
         </div>
-      </main>
-    </ProtectedRoute>
+      </div>
+      
+      <div className="instructors-table">
+        <div className="table-header">
+          <div className="col-name">Name</div>
+          <div className="col-email">Email</div>
+          <div className="col-specialization">Specialization</div>
+          <div className="col-status">Status</div>
+          <div className="col-cohorts">Assigned Cohorts</div>
+          <div className="col-students">Students</div>
+          <div className="col-joined">Joined</div>
+          <div className="col-activity">Last Active</div>
+          <div className="col-actions">Actions</div>
+        </div>
+        
+        {filteredInstructors.length === 0 ? (
+          <div className="empty-state">
+            <p>No instructors found matching your criteria.</p>
+          </div>
+        ) : (
+          <div className="table-body">
+            {filteredInstructors.map(instructor => (
+              <div key={instructor.id} className="table-row">
+                <div className="col-name">{instructor.name}</div>
+                <div className="col-email">{instructor.email}</div>
+                <div className="col-specialization">{instructor.specialization}</div>
+                <div className="col-status">
+                  <span className={`status-badge status-${instructor.status}`}>
+                    {instructor.status.charAt(0).toUpperCase() + instructor.status.slice(1)}
+                  </span>
+                </div>
+                <div className="col-cohorts">
+                  {instructor.assignedCohorts.length > 0 ? (
+                    <span>{instructor.assignedCohorts.length} cohort(s)</span>
+                  ) : (
+                    <span className="no-cohorts">None</span>
+                  )}
+                </div>
+                <div className="col-students">{instructor.totalStudents}</div>
+                <div className="col-joined">{formatDate(instructor.joinDate)}</div>
+                <div className="col-activity">{formatDateTime(instructor.lastActive)}</div>
+                <div className="col-actions">
+                  <Link href={`/secure/admin/instructors/${instructor.id}`}>
+                    <button className="view-button">View</button>
+                  </Link>
+                  <button className="edit-button">Edit</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      
+      <div className="pagination">
+        <button className="pagination-button" disabled>Previous</button>
+        <span className="pagination-info">Page 1 of 1</span>
+        <button className="pagination-button" disabled>Next</button>
+      </div>
+      
+      <div className="bulk-actions">
+        <h3>Bulk Actions</h3>
+        <div className="action-buttons">
+          <button className="bulk-action-button" disabled>Assign to Cohort</button>
+          <button className="bulk-action-button" disabled>Change Status</button>
+          <button className="bulk-action-button" disabled>Export Selected</button>
+        </div>
+      </div>
+    </main>
   );
 } 

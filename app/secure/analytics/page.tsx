@@ -5,7 +5,8 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, Heading, Text, Button, Flex, Loader } from '@aws-amplify/ui-react';
-import AnalyticsDashboard from '../../../src/components/analytics/AnalyticsDashboard';
+import AnalyticsDashboard from '@/components/analytics/AnalyticsDashboard';
+import { UserRole } from '@/utils/security/fieldAccessControl';
 
 export default function PersonalAnalyticsPage() {
   const { user, isLoading: authLoading } = useAuth();
@@ -46,34 +47,30 @@ export default function PersonalAnalyticsPage() {
   
   if (authLoading || isLoading) {
     return (
-      <ProtectedRoute>
-        <Flex justifyContent="center" padding="2rem">
-          <Loader size="large" />
-        </Flex>
-      </ProtectedRoute>
+      <Flex justifyContent="center" padding="2rem">
+        <Loader size="large" />
+      </Flex>
     );
   }
   
   if (!showcaseId) {
     return (
-      <ProtectedRoute>
-        <Card>
-          <Heading level={2}>No Showcase Found</Heading>
-          <Text>
-            You need to create a showcase before you can view analytics.
-          </Text>
-          <Flex marginTop="1rem">
-            <Link href="/secure/showcase">
-              <Button>Create Showcase</Button>
-            </Link>
-          </Flex>
-        </Card>
-      </ProtectedRoute>
+      <Card>
+        <Heading level={2}>No Showcase Found</Heading>
+        <Text>
+          You need to create a showcase before you can view analytics.
+        </Text>
+        <Flex marginTop="1rem">
+          <Link href="/secure/showcase">
+            <Button>Create Showcase</Button>
+          </Link>
+        </Flex>
+      </Card>
     );
   }
   
   return (
-    <ProtectedRoute>
+    <ProtectedRoute requiredRoles={[UserRole.STUDENT]} redirectPath="/access-denied">
       <Flex direction="column" gap="1rem" padding="1rem">
         <Flex justifyContent="space-between" alignItems="center">
           <Heading level={2}>Personal Analytics</Heading>

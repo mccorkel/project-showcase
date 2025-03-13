@@ -1,43 +1,26 @@
-"use client";
+import React from 'react';
+import Link from 'next/link';
 
-import Link from "next/link";
-import "./../app/app.css";
-
-export default function LandingPage() {
+export default function Home() {
   return (
-    <main className="landing-page">
-      <div className="hero-section">
-        <h1>Student Project Showcase</h1>
-        <p className="tagline">Showcase your best work to the world</p>
-        
-        <div className="cta-container">
-          <Link href="/login">
-            <button className="cta-button">Get Started</button>
-          </Link>
-          
-          <Link href="/secure/dashboard" className="secondary-link">
-            Go to Dashboard
-          </Link>
-        </div>
+    <main className="flex min-h-screen flex-col items-center justify-center p-24">
+      <h1 className="text-4xl font-bold mb-8">Student Project Showcase</h1>
+      <p className="text-xl mb-8">Welcome to the Project Showcase platform</p>
+      
+      <div className="flex gap-4">
+        <Link 
+          href="/login" 
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        >
+          Login
+        </Link>
+        <Link 
+          href="/secure/dashboard" 
+          className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+        >
+          Dashboard
+        </Link>
       </div>
-
-      <section className="features-section">
-        <h2>Features</h2>
-        <div className="features-grid">
-          <div className="feature-card">
-            <h3>Create Your Profile</h3>
-            <p>Build a professional profile to showcase your skills and experience.</p>
-          </div>
-          <div className="feature-card">
-            <h3>Showcase Projects</h3>
-            <p>Display your best work with customizable project showcases.</p>
-          </div>
-          <div className="feature-card">
-            <h3>Track Analytics</h3>
-            <p>Monitor engagement with your profile and projects.</p>
-          </div>
-        </div>
-      </section>
     </main>
   );
-}
+} 

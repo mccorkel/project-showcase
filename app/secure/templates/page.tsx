@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import ProtectedRoute from '@/components/ProtectedRoute';
 import Link from 'next/link';
 
 // Mock data for existing templates
@@ -334,165 +333,163 @@ document.addEventListener('DOMContentLoaded', function() {
   };
   
   return (
-    <ProtectedRoute>
-      <main className="templates-page">
-        <div className="page-header">
-          <h1>Template Management</h1>
-        </div>
-        
-        <div className="tabs">
-          <button 
-            className={`tab-button ${activeTab === 'browse' ? 'active' : ''}`}
-            onClick={() => setActiveTab('browse')}
-          >
-            Browse Templates
-          </button>
-          <button 
-            className={`tab-button ${activeTab === 'create' ? 'active' : ''}`}
-            onClick={() => setActiveTab('create')}
-          >
-            Create Template
-          </button>
-        </div>
-        
-        {activeTab === 'browse' && (
-          <div className="browse-templates">
-            <div className="templates-grid">
-              {mockTemplates.map(template => (
-                <div 
-                  key={template.id}
-                  className={`template-card ${selectedTemplate === template.id ? 'selected' : ''}`}
-                  onClick={() => handleTemplateSelect(template.id)}
-                >
-                  <div className="template-thumbnail">
-                    <div className="placeholder-image"></div>
-                    {template.isSystem && (
-                      <div className="system-badge">System</div>
-                    )}
-                  </div>
-                  <div className="template-info">
-                    <h3>{template.name}</h3>
-                    <p>{template.description}</p>
-                    <div className="template-meta">
-                      <span>Created by: {template.createdBy}</span>
-                      <span>Created: {new Date(template.createdAt).toLocaleDateString()}</span>
-                    </div>
-                  </div>
-                  {selectedTemplate === template.id && (
-                    <div className="template-actions">
-                      <button className="action-button">Use Template</button>
-                      {!template.isSystem && (
-                        <button className="action-button">Edit</button>
-                      )}
-                      <button className="action-button">Preview</button>
-                    </div>
+    <main className="templates-page">
+      <div className="page-header">
+        <h1>Template Management</h1>
+        <Link href="/secure/dashboard" className="back-link">
+          ← Back to Dashboard
+        </Link>
+      </div>
+      
+      <div className="tabs">
+        <button 
+          className={`tab-button ${activeTab === 'browse' ? 'active' : ''}`}
+          onClick={() => setActiveTab('browse')}
+        >
+          Browse Templates
+        </button>
+        <button 
+          className={`tab-button ${activeTab === 'create' ? 'active' : ''}`}
+          onClick={() => setActiveTab('create')}
+        >
+          Create Template
+        </button>
+      </div>
+      
+      {activeTab === 'browse' && (
+        <div className="browse-templates">
+          <div className="templates-grid">
+            {mockTemplates.map(template => (
+              <div 
+                key={template.id}
+                className={`template-card ${selectedTemplate === template.id ? 'selected' : ''}`}
+                onClick={() => handleTemplateSelect(template.id)}
+              >
+                <div className="template-thumbnail">
+                  <div className="placeholder-image"></div>
+                  {template.isSystem && (
+                    <div className="system-badge">System</div>
                   )}
                 </div>
-              ))}
+                <div className="template-info">
+                  <h3>{template.name}</h3>
+                  <p>{template.description}</p>
+                  <div className="template-meta">
+                    <span>Created by: {template.createdBy}</span>
+                    <span>Created: {new Date(template.createdAt).toLocaleDateString()}</span>
+                  </div>
+                </div>
+                {selectedTemplate === template.id && (
+                  <div className="template-actions">
+                    <button className="action-button">Use Template</button>
+                    {!template.isSystem && (
+                      <button className="action-button">Edit</button>
+                    )}
+                    <button className="action-button">Preview</button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      
+      {activeTab === 'create' && (
+        <div className="create-template">
+          <form className="template-form" onSubmit={handleCreateTemplate}>
+            <div className="form-section">
+              <h2>Template Information</h2>
+              <div className="form-group">
+                <label htmlFor="name">Template Name</label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  value={newTemplate.name}
+                  onChange={handleInputChange}
+                  required
+                  placeholder="e.g., Modern Developer Portfolio"
+                />
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="description">Description</label>
+                <textarea
+                  id="description"
+                  name="description"
+                  value={newTemplate.description}
+                  onChange={handleInputChange}
+                  rows={3}
+                  placeholder="Describe your template"
+                  required
+                />
+              </div>
             </div>
-          </div>
-        )}
-        
-        {activeTab === 'create' && (
-          <div className="create-template">
-            <form className="template-form" onSubmit={handleCreateTemplate}>
-              <div className="form-section">
-                <h2>Template Information</h2>
-                <div className="form-group">
-                  <label htmlFor="name">Template Name</label>
-                  <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    value={newTemplate.name}
-                    onChange={handleInputChange}
-                    required
-                    placeholder="e.g., Modern Developer Portfolio"
-                  />
-                </div>
-                
-                <div className="form-group">
-                  <label htmlFor="description">Description</label>
-                  <textarea
-                    id="description"
-                    name="description"
-                    value={newTemplate.description}
-                    onChange={handleInputChange}
-                    rows={3}
-                    placeholder="Describe your template"
-                    required
-                  />
-                </div>
+            
+            <div className="form-section">
+              <h2>HTML Template</h2>
+              <p className="section-description">
+                Use double curly braces for variables (e.g., {'{{profile.first_name}}'}) and 
+                block tags for loops and conditionals (e.g., {'{% for project in projects %}'}).
+              </p>
+              <div className="form-group">
+                <label htmlFor="htmlContent">HTML Content</label>
+                <textarea
+                  id="htmlContent"
+                  name="htmlContent"
+                  value={newTemplate.htmlContent}
+                  onChange={handleInputChange}
+                  rows={15}
+                  className="code-editor"
+                  required
+                />
               </div>
-              
-              <div className="form-section">
-                <h2>HTML Template</h2>
-                <p className="section-description">
-                  Use double curly braces for variables (e.g., {'{{profile.first_name}}'}) and 
-                  block tags for loops and conditionals (e.g., {'{% for project in projects %}'}).
-                </p>
-                <div className="form-group">
-                  <label htmlFor="htmlContent">HTML Content</label>
-                  <textarea
-                    id="htmlContent"
-                    name="htmlContent"
-                    value={newTemplate.htmlContent}
-                    onChange={handleInputChange}
-                    rows={15}
-                    className="code-editor"
-                    required
-                  />
-                </div>
+            </div>
+            
+            <div className="form-section">
+              <h2>CSS Styles</h2>
+              <div className="form-group">
+                <label htmlFor="cssContent">CSS Content</label>
+                <textarea
+                  id="cssContent"
+                  name="cssContent"
+                  value={newTemplate.cssContent}
+                  onChange={handleInputChange}
+                  rows={15}
+                  className="code-editor"
+                  required
+                />
               </div>
-              
-              <div className="form-section">
-                <h2>CSS Styles</h2>
-                <div className="form-group">
-                  <label htmlFor="cssContent">CSS Content</label>
-                  <textarea
-                    id="cssContent"
-                    name="cssContent"
-                    value={newTemplate.cssContent}
-                    onChange={handleInputChange}
-                    rows={15}
-                    className="code-editor"
-                    required
-                  />
-                </div>
+            </div>
+            
+            <div className="form-section">
+              <h2>JavaScript (Optional)</h2>
+              <div className="form-group">
+                <label htmlFor="jsContent">JavaScript Content</label>
+                <textarea
+                  id="jsContent"
+                  name="jsContent"
+                  value={newTemplate.jsContent}
+                  onChange={handleInputChange}
+                  rows={10}
+                  className="code-editor"
+                />
               </div>
-              
-              <div className="form-section">
-                <h2>JavaScript (Optional)</h2>
-                <div className="form-group">
-                  <label htmlFor="jsContent">JavaScript Content</label>
-                  <textarea
-                    id="jsContent"
-                    name="jsContent"
-                    value={newTemplate.jsContent}
-                    onChange={handleInputChange}
-                    rows={10}
-                    className="code-editor"
-                  />
-                </div>
-              </div>
-              
-              <div className="form-actions">
-                <button type="submit" className="primary-button">Create Template</button>
-                <button 
-                  type="button" 
-                  className="secondary-button"
-                  onClick={handlePreviewTemplate}
-                >
-                  Preview Template
-                </button>
-                <Link href="/secure/dashboard">
-                  <button type="button" className="tertiary-button">Cancel</button>
-                </Link>
-              </div>
-            </form>
-          </div>
-        )}
-      </main>
-    </ProtectedRoute>
+            </div>
+            
+            <div className="form-actions">
+              <button type="submit" className="primary-button">Create Template</button>
+              <button 
+                type="button" 
+                className="secondary-button"
+                onClick={handlePreviewTemplate}
+              >
+                Preview Template
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+    </main>
   );
 } 

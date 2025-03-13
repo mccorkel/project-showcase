@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import ProtectedRoute from '@/components/ProtectedRoute';
 import Link from 'next/link';
+import { UserRole } from '@/utils/security/fieldAccessControl';
 
 // Mock data for admin dashboard
 const mockData = {
@@ -60,68 +60,6 @@ const mockData = {
       timestamp: '2023-10-13T09:30:00Z'
     }
   ],
-  cohortStats: [
-    {
-      id: '1',
-      name: 'Web Development - Fall 2023',
-      startDate: '2023-09-01T00:00:00Z',
-      endDate: '2023-12-15T00:00:00Z',
-      studentCount: 24,
-      instructorCount: 2,
-      submissionStats: {
-        total: 72,
-        graded: 48,
-        pending: 24,
-        passingRate: '87%'
-      },
-      status: 'active'
-    },
-    {
-      id: '2',
-      name: 'Data Science - Spring 2023',
-      startDate: '2023-01-15T00:00:00Z',
-      endDate: '2023-05-30T00:00:00Z',
-      studentCount: 18,
-      instructorCount: 2,
-      submissionStats: {
-        total: 108,
-        graded: 108,
-        pending: 0,
-        passingRate: '92%'
-      },
-      status: 'completed'
-    },
-    {
-      id: '3',
-      name: 'UX Design - Summer 2023',
-      startDate: '2023-06-01T00:00:00Z',
-      endDate: '2023-08-30T00:00:00Z',
-      studentCount: 16,
-      instructorCount: 1,
-      submissionStats: {
-        total: 80,
-        graded: 80,
-        pending: 0,
-        passingRate: '94%'
-      },
-      status: 'completed'
-    },
-    {
-      id: '4',
-      name: 'Data Science - Winter 2024',
-      startDate: '2024-01-15T00:00:00Z',
-      endDate: '2024-05-30T00:00:00Z',
-      studentCount: 0,
-      instructorCount: 0,
-      submissionStats: {
-        total: 0,
-        graded: 0,
-        pending: 0,
-        passingRate: 'N/A'
-      },
-      status: 'upcoming'
-    }
-  ],
   systemAlerts: [
     {
       id: '1',
@@ -139,7 +77,7 @@ const mockData = {
 };
 
 export default function AdminDashboardPage() {
-  const [cohortFilter, setCohortFilter] = useState('all');
+  const [selectedTimeRange, setSelectedTimeRange] = useState('7days');
   
   // Format date for display
   const formatDate = (dateString: string) => {
@@ -153,301 +91,133 @@ export default function AdminDashboardPage() {
     });
   };
   
-  // Format date without time
-  const formatDateOnly = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
-  };
-  
   return (
-    <ProtectedRoute requiredRoles={['admin']}>
-      <main className="admin-dashboard-page">
-        <div className="page-header">
-          <h1>Admin Dashboard</h1>
-          <div className="header-actions">
-            <Link href="/secure/admin/system-settings">
-              <button className="settings-button">System Settings</button>
+    <main className="admin-dashboard-page">
+      <div className="page-header">
+        <h1>Admin Dashboard</h1>
+        <div className="time-range-selector">
+          <label htmlFor="time-range">Time Range:</label>
+          <select 
+            id="time-range" 
+            value={selectedTimeRange} 
+            onChange={(e) => setSelectedTimeRange(e.target.value)}
+          >
+            <option value="7days">Last 7 Days</option>
+            <option value="30days">Last 30 Days</option>
+            <option value="90days">Last 90 Days</option>
+            <option value="year">Last Year</option>
+          </select>
+        </div>
+      </div>
+      
+      <div className="system-alerts">
+        {mockData.systemAlerts.map(alert => (
+          <div key={alert.id} className={`alert alert-${alert.type}`}>
+            <div className="alert-icon">
+              {alert.type === 'warning' ? '⚠️' : 'ℹ️'}
+            </div>
+            <div className="alert-content">
+              <p>{alert.message}</p>
+              <span className="alert-timestamp">{formatDate(alert.timestamp)}</span>
+            </div>
+            <button className="alert-dismiss">×</button>
+          </div>
+        ))}
+      </div>
+      
+      <div className="stats-overview">
+        <div className="stats-card">
+          <h3>Users</h3>
+          <div className="stats-grid">
+            <div className="stat-item">
+              <span className="stat-value">{mockData.systemStats.totalUsers}</span>
+              <span className="stat-label">Total Users</span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-value">{mockData.systemStats.totalStudents}</span>
+              <span className="stat-label">Students</span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-value">{mockData.systemStats.totalInstructors}</span>
+              <span className="stat-label">Instructors</span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-value">{mockData.systemStats.totalAdmins}</span>
+              <span className="stat-label">Admins</span>
+            </div>
+          </div>
+          <div className="stats-actions">
+            <Link href="/secure/admin/users">
+              <button className="action-button">Manage Users</button>
             </Link>
           </div>
         </div>
         
-        <div className="system-alerts">
-          {mockData.systemAlerts.map(alert => (
-            <div key={alert.id} className={`alert alert-${alert.type}`}>
-              <div className="alert-icon">
-                {alert.type === 'warning' ? '⚠️' : 'ℹ️'}
+        <div className="stats-card">
+          <h3>Submissions</h3>
+          <div className="stats-grid">
+            <div className="stat-item">
+              <span className="stat-value">{mockData.systemStats.totalSubmissions}</span>
+              <span className="stat-label">Total Submissions</span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-value">{mockData.systemStats.pendingSubmissions}</span>
+              <span className="stat-label">Pending</span>
+            </div>
+          </div>
+          <div className="stats-actions">
+            <Link href="/secure/admin/submissions">
+              <button className="action-button">View Submissions</button>
+            </Link>
+          </div>
+        </div>
+      </div>
+      
+      <div className="recent-activity">
+        <h2>Recent Activity</h2>
+        <div className="activity-list">
+          {mockData.recentActivity.map(activity => (
+            <div key={activity.id} className={`activity-item activity-${activity.type}`}>
+              <div className="activity-icon">
+                {activity.type === 'user_created' ? '👤' : 
+                 activity.type === 'user_role_changed' ? '🔄' :
+                 activity.type === 'cohort_created' ? '👥' :
+                 activity.type === 'template_created' ? '📝' : '⚙️'}
               </div>
-              <div className="alert-content">
-                <p>{alert.message}</p>
-                <span className="alert-timestamp">{formatDate(alert.timestamp)}</span>
+              <div className="activity-content">
+                <h4>
+                  {activity.type === 'user_created' ? `New ${activity.role}: ${activity.name}` : 
+                   activity.type === 'user_role_changed' ? `Role changed: ${activity.name} (${activity.previousRole} → ${activity.role})` :
+                   activity.type === 'cohort_created' ? `New cohort: ${activity.cohortName}` :
+                   activity.type === 'template_created' ? `New template: ${activity.templateName}` :
+                   `Setting changed: ${activity.settingName}`}
+                </h4>
+                <p className="activity-meta">
+                  {formatDate(activity.timestamp)}
+                </p>
               </div>
-              <button className="alert-dismiss">×</button>
             </div>
           ))}
         </div>
-        
-        <div className="stats-overview">
-          <div className="stats-card">
-            <h3>Users</h3>
-            <div className="stats-grid">
-              <div className="stat-item">
-                <span className="stat-value">{mockData.systemStats.totalUsers}</span>
-                <span className="stat-label">Total Users</span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-value">{mockData.systemStats.totalStudents}</span>
-                <span className="stat-label">Students</span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-value">{mockData.systemStats.totalInstructors}</span>
-                <span className="stat-label">Instructors</span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-value">{mockData.systemStats.totalAdmins}</span>
-                <span className="stat-label">Admins</span>
-              </div>
-            </div>
-            <div className="stats-actions">
-              <Link href="/secure/admin/students">
-                <button className="action-button">Manage Students</button>
-              </Link>
-              <Link href="/secure/admin/instructors">
-                <button className="action-button">Manage Instructors</button>
-              </Link>
-            </div>
-          </div>
-          
-          <div className="stats-card">
-            <h3>Cohorts</h3>
-            <div className="stats-grid">
-              <div className="stat-item">
-                <span className="stat-value">{mockData.systemStats.totalCohorts}</span>
-                <span className="stat-label">Total Cohorts</span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-value">{mockData.systemStats.activeCohorts}</span>
-                <span className="stat-label">Active Cohorts</span>
-              </div>
-            </div>
-            <div className="stats-actions">
-              <Link href="/secure/admin/cohorts">
-                <button className="action-button">Manage Cohorts</button>
-              </Link>
-            </div>
-          </div>
-          
-          <div className="stats-card">
-            <h3>Submissions</h3>
-            <div className="stats-grid">
-              <div className="stat-item">
-                <span className="stat-value">{mockData.systemStats.totalSubmissions}</span>
-                <span className="stat-label">Total Submissions</span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-value">{mockData.systemStats.pendingSubmissions}</span>
-                <span className="stat-label">Pending</span>
-              </div>
-            </div>
-            <div className="stats-actions">
-              <Link href="/secure/admin/submissions">
-                <button className="action-button">View Submissions</button>
-              </Link>
-            </div>
-          </div>
-          
-          <div className="stats-card">
-            <h3>Showcases</h3>
-            <div className="stats-grid">
-              <div className="stat-item">
-                <span className="stat-value">{mockData.systemStats.totalShowcases}</span>
-                <span className="stat-label">Total Showcases</span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-value">{mockData.systemStats.publicShowcases}</span>
-                <span className="stat-label">Public</span>
-              </div>
-            </div>
-            <div className="stats-actions">
-              <Link href="/secure/admin/templates">
-                <button className="action-button">Manage Templates</button>
-              </Link>
-            </div>
-          </div>
+      </div>
+      
+      <div className="quick-actions">
+        <h2>Quick Actions</h2>
+        <div className="action-buttons">
+          <Link href="/secure/admin/users/new">
+            <button className="primary-button">Create User</button>
+          </Link>
+          <Link href="/secure/admin/templates">
+            <button className="secondary-button">Manage Templates</button>
+          </Link>
+          <Link href="/secure/admin/analytics">
+            <button className="secondary-button">View Analytics</button>
+          </Link>
+          <Link href="/secure/admin/system-settings">
+            <button className="secondary-button">System Settings</button>
+          </Link>
         </div>
-        
-        <div className="dashboard-sections">
-          <section className="cohorts-section">
-            <div className="section-header">
-              <h2>Cohorts</h2>
-              <div className="section-actions">
-                <Link href="/secure/admin/cohorts/new">
-                  <button className="primary-button">Create Cohort</button>
-                </Link>
-                <Link href="/secure/admin/cohorts">
-                  <button className="secondary-button">View All</button>
-                </Link>
-              </div>
-            </div>
-            
-            <div className="cohort-filter">
-              <button 
-                className={`filter-button ${cohortFilter === 'all' ? 'active' : ''}`}
-                onClick={() => setCohortFilter('all')}
-              >
-                All
-              </button>
-              <button 
-                className={`filter-button ${cohortFilter === 'active' ? 'active' : ''}`}
-                onClick={() => setCohortFilter('active')}
-              >
-                Active
-              </button>
-              <button 
-                className={`filter-button ${cohortFilter === 'upcoming' ? 'active' : ''}`}
-                onClick={() => setCohortFilter('upcoming')}
-              >
-                Upcoming
-              </button>
-              <button 
-                className={`filter-button ${cohortFilter === 'completed' ? 'active' : ''}`}
-                onClick={() => setCohortFilter('completed')}
-              >
-                Completed
-              </button>
-            </div>
-            
-            <div className="cohorts-grid">
-              {mockData.cohortStats
-                .filter(cohort => cohortFilter === 'all' || cohort.status === cohortFilter)
-                .map(cohort => (
-                  <div key={cohort.id} className={`cohort-card status-${cohort.status}`}>
-                    <div className="cohort-header">
-                      <h3>{cohort.name}</h3>
-                      <span className={`status-badge ${cohort.status}`}>
-                        {cohort.status.charAt(0).toUpperCase() + cohort.status.slice(1)}
-                      </span>
-                    </div>
-                    <div className="cohort-dates">
-                      <div className="date-range">
-                        <span className="date-label">Start:</span>
-                        <span className="date-value">{formatDateOnly(cohort.startDate)}</span>
-                      </div>
-                      <div className="date-range">
-                        <span className="date-label">End:</span>
-                        <span className="date-value">{formatDateOnly(cohort.endDate)}</span>
-                      </div>
-                    </div>
-                    <div className="cohort-stats">
-                      <div className="cohort-stat">
-                        <span className="stat-value">{cohort.studentCount}</span>
-                        <span className="stat-label">Students</span>
-                      </div>
-                      <div className="cohort-stat">
-                        <span className="stat-value">{cohort.instructorCount}</span>
-                        <span className="stat-label">Instructors</span>
-                      </div>
-                      <div className="cohort-stat">
-                        <span className="stat-value">{cohort.submissionStats.total}</span>
-                        <span className="stat-label">Submissions</span>
-                      </div>
-                      <div className="cohort-stat">
-                        <span className="stat-value">{cohort.submissionStats.passingRate}</span>
-                        <span className="stat-label">Pass Rate</span>
-                      </div>
-                    </div>
-                    <div className="cohort-actions">
-                      <Link href={`/secure/admin/cohorts/${cohort.id}`}>
-                        <button className="view-button">View Details</button>
-                      </Link>
-                    </div>
-                  </div>
-                ))}
-            </div>
-          </section>
-          
-          <section className="activity-section">
-            <div className="section-header">
-              <h2>Recent Activity</h2>
-              <Link href="/secure/admin/audit-logs">
-                <button className="view-all-button">View Audit Logs</button>
-              </Link>
-            </div>
-            
-            <div className="activity-list">
-              {mockData.recentActivity.map(activity => (
-                <div key={activity.id} className={`activity-item ${activity.type}`}>
-                  <div className="activity-icon">
-                    {activity.type === 'user_created' && '👤'}
-                    {activity.type === 'user_role_changed' && '🔄'}
-                    {activity.type === 'cohort_created' && '👥'}
-                    {activity.type === 'template_created' && '📝'}
-                    {activity.type === 'system_setting_changed' && '⚙️'}
-                  </div>
-                  <div className="activity-content">
-                    <h4>
-                      {activity.type === 'user_created' && `New user created: ${activity.name}`}
-                      {activity.type === 'user_role_changed' && `Role changed: ${activity.name} (${activity.previousRole} → ${activity.role})`}
-                      {activity.type === 'cohort_created' && `New cohort created: ${activity.cohortName}`}
-                      {activity.type === 'template_created' && `New template created: ${activity.templateName}`}
-                      {activity.type === 'system_setting_changed' && `Setting changed: ${activity.settingName}`}
-                    </h4>
-                    <p className="activity-meta">
-                      {formatDate(activity.timestamp)}
-                      {activity.cohort && ` • ${activity.cohort}`}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-        </div>
-        
-        <div className="quick-actions">
-          <h2>Quick Actions</h2>
-          <div className="actions-grid">
-            <Link href="/secure/admin/students/new">
-              <div className="action-card">
-                <div className="action-icon">👤</div>
-                <div className="action-label">Add Student</div>
-              </div>
-            </Link>
-            <Link href="/secure/admin/instructors/new">
-              <div className="action-card">
-                <div className="action-icon">👨‍🏫</div>
-                <div className="action-label">Add Instructor</div>
-              </div>
-            </Link>
-            <Link href="/secure/admin/cohorts/new">
-              <div className="action-card">
-                <div className="action-icon">👥</div>
-                <div className="action-label">Create Cohort</div>
-              </div>
-            </Link>
-            <Link href="/secure/admin/templates/new">
-              <div className="action-card">
-                <div className="action-icon">📝</div>
-                <div className="action-label">Create Template</div>
-              </div>
-            </Link>
-            <Link href="/secure/admin/lms-integration">
-              <div className="action-card">
-                <div className="action-icon">🔄</div>
-                <div className="action-label">LMS Integration</div>
-              </div>
-            </Link>
-            <Link href="/secure/admin/analytics">
-              <div className="action-card">
-                <div className="action-icon">📊</div>
-                <div className="action-label">System Analytics</div>
-              </div>
-            </Link>
-          </div>
-        </div>
-      </main>
-    </ProtectedRoute>
+      </div>
+    </main>
   );
 } 

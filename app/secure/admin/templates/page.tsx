@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import ProtectedRoute from '@/components/ProtectedRoute';
 import Link from 'next/link';
+import { UserRole } from '@/utils/security/fieldAccessControl';
 
 // Mock data for template management
 const mockData = {
@@ -99,134 +99,132 @@ export default function AdminTemplateManagementPage() {
   });
   
   return (
-    <ProtectedRoute requiredRoles={['admin']}>
-      <main className="admin-template-management-page">
-        <div className="page-header">
-          <h1>Template Management</h1>
-          <p className="page-description">
-            Manage showcase templates available to students.
-          </p>
-          <div className="header-actions">
-            <Link href="/secure/admin/templates/new">
-              <button className="create-button">Create New Template</button>
-            </Link>
-            <button className="import-button">Import Template</button>
-          </div>
+    <main className="admin-template-management-page">
+      <div className="page-header">
+        <h1>Template Management</h1>
+        <p className="page-description">
+          Manage showcase templates available to students.
+        </p>
+        <div className="header-actions">
+          <Link href="/secure/admin/templates/new">
+            <button className="create-button">Create New Template</button>
+          </Link>
+          <button className="import-button">Import Template</button>
+        </div>
+      </div>
+      
+      <div className="filters-section">
+        <div className="search-bar">
+          <input 
+            type="text" 
+            placeholder="Search templates..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="search-input"
+          />
         </div>
         
-        <div className="filters-section">
-          <div className="search-bar">
-            <input 
-              type="text" 
-              placeholder="Search templates..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="search-input"
-            />
-          </div>
-          
-          <div className="filter-tabs">
-            <button 
-              className={`filter-tab ${activeFilter === 'all' ? 'active' : ''}`}
-              onClick={() => setActiveFilter('all')}
-            >
-              All Templates
-            </button>
-            <button 
-              className={`filter-tab ${activeFilter === 'active' ? 'active' : ''}`}
-              onClick={() => setActiveFilter('active')}
-            >
-              Active
-            </button>
-            <button 
-              className={`filter-tab ${activeFilter === 'inactive' ? 'active' : ''}`}
-              onClick={() => setActiveFilter('inactive')}
-            >
-              Inactive
-            </button>
-          </div>
+        <div className="filter-tabs">
+          <button 
+            className={`filter-tab ${activeFilter === 'all' ? 'active' : ''}`}
+            onClick={() => setActiveFilter('all')}
+          >
+            All Templates
+          </button>
+          <button 
+            className={`filter-tab ${activeFilter === 'active' ? 'active' : ''}`}
+            onClick={() => setActiveFilter('active')}
+          >
+            Active
+          </button>
+          <button 
+            className={`filter-tab ${activeFilter === 'inactive' ? 'active' : ''}`}
+            onClick={() => setActiveFilter('inactive')}
+          >
+            Inactive
+          </button>
         </div>
-        
-        <div className="templates-grid">
-          {filteredTemplates.length === 0 ? (
-            <div className="empty-state">
-              <p>No templates found matching your criteria.</p>
-            </div>
-          ) : (
-            filteredTemplates.map(template => (
-              <div key={template.id} className={`template-card ${template.is_active ? 'active' : 'inactive'}`}>
-                <div className="template-thumbnail">
-                  <img src={template.thumbnail_url} alt={template.name} />
-                  {!template.is_active && (
-                    <div className="inactive-overlay">
-                      <span>Inactive</span>
-                    </div>
-                  )}
-                </div>
-                
-                <div className="template-content">
-                  <h2 className="template-name">{template.name}</h2>
-                  <p className="template-description">{template.description}</p>
-                  
-                  <div className="template-meta">
-                    <div className="meta-item">
-                      <span className="label">Created:</span> {formatDate(template.created_at)}
-                    </div>
-                    <div className="meta-item">
-                      <span className="label">Updated:</span> {formatDate(template.updated_at)}
-                    </div>
-                    <div className="meta-item">
-                      <span className="label">Theme:</span> {template.default_theme.charAt(0).toUpperCase() + template.default_theme.slice(1)}
-                    </div>
-                    <div className="meta-item">
-                      <span className="label">Usage:</span> {template.usage_count} students
-                    </div>
+      </div>
+      
+      <div className="templates-grid">
+        {filteredTemplates.length === 0 ? (
+          <div className="empty-state">
+            <p>No templates found matching your criteria.</p>
+          </div>
+        ) : (
+          filteredTemplates.map(template => (
+            <div key={template.id} className={`template-card ${template.is_active ? 'active' : 'inactive'}`}>
+              <div className="template-thumbnail">
+                <img src={template.thumbnail_url} alt={template.name} />
+                {!template.is_active && (
+                  <div className="inactive-overlay">
+                    <span>Inactive</span>
                   </div>
-                  
-                  <div className="template-features">
-                    {template.features.map((feature, index) => (
-                      <span key={index} className="feature-tag">{feature}</span>
-                    ))}
+                )}
+              </div>
+              
+              <div className="template-content">
+                <h2 className="template-name">{template.name}</h2>
+                <p className="template-description">{template.description}</p>
+                
+                <div className="template-meta">
+                  <div className="meta-item">
+                    <span className="label">Created:</span> {formatDate(template.created_at)}
+                  </div>
+                  <div className="meta-item">
+                    <span className="label">Updated:</span> {formatDate(template.updated_at)}
+                  </div>
+                  <div className="meta-item">
+                    <span className="label">Theme:</span> {template.default_theme.charAt(0).toUpperCase() + template.default_theme.slice(1)}
+                  </div>
+                  <div className="meta-item">
+                    <span className="label">Usage:</span> {template.usage_count} students
                   </div>
                 </div>
                 
-                <div className="template-actions">
-                  <Link href={`/secure/admin/templates/${template.id}`}>
-                    <button className="view-button">View Details</button>
-                  </Link>
-                  <Link href={`/secure/admin/templates/${template.id}/edit`}>
-                    <button className="edit-button">Edit</button>
-                  </Link>
-                  <button 
-                    className={template.is_active ? "deactivate-button" : "activate-button"}
-                  >
-                    {template.is_active ? "Deactivate" : "Activate"}
-                  </button>
+                <div className="template-features">
+                  {template.features.map((feature, index) => (
+                    <span key={index} className="feature-tag">{feature}</span>
+                  ))}
                 </div>
               </div>
-            ))
-          )}
+              
+              <div className="template-actions">
+                <Link href={`/secure/admin/templates/${template.id}`}>
+                  <button className="view-button">View Details</button>
+                </Link>
+                <Link href={`/secure/admin/templates/${template.id}/edit`}>
+                  <button className="edit-button">Edit</button>
+                </Link>
+                <button 
+                  className={template.is_active ? "deactivate-button" : "activate-button"}
+                >
+                  {template.is_active ? "Deactivate" : "Activate"}
+                </button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+      
+      <div className="template-stats">
+        <div className="stat-card">
+          <h3>Total Templates</h3>
+          <div className="stat-value">{mockData.templates.length}</div>
         </div>
-        
-        <div className="template-stats">
-          <div className="stat-card">
-            <h3>Total Templates</h3>
-            <div className="stat-value">{mockData.templates.length}</div>
-          </div>
-          <div className="stat-card">
-            <h3>Active Templates</h3>
-            <div className="stat-value">{mockData.templates.filter(t => t.is_active).length}</div>
-          </div>
-          <div className="stat-card">
-            <h3>Inactive Templates</h3>
-            <div className="stat-value">{mockData.templates.filter(t => !t.is_active).length}</div>
-          </div>
-          <div className="stat-card">
-            <h3>Total Usage</h3>
-            <div className="stat-value">{mockData.templates.reduce((sum, t) => sum + t.usage_count, 0)}</div>
-          </div>
+        <div className="stat-card">
+          <h3>Active Templates</h3>
+          <div className="stat-value">{mockData.templates.filter(t => t.is_active).length}</div>
         </div>
-      </main>
-    </ProtectedRoute>
+        <div className="stat-card">
+          <h3>Inactive Templates</h3>
+          <div className="stat-value">{mockData.templates.filter(t => !t.is_active).length}</div>
+        </div>
+        <div className="stat-card">
+          <h3>Total Usage</h3>
+          <div className="stat-value">{mockData.templates.reduce((sum, t) => sum + t.usage_count, 0)}</div>
+        </div>
+      </div>
+    </main>
   );
 } 

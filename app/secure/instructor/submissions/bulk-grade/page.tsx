@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
   Card, 
@@ -13,7 +12,7 @@ import {
   SelectField
 } from '@aws-amplify/ui-react';
 import Link from 'next/link';
-import BulkGradingActions from '../../../../src/components/instructor/BulkGradingActions';
+import BulkGradingActions from '@/components/instructor/BulkGradingActions';
 
 export default function BulkGradingPage() {
   const { user, isLoading: authLoading } = useAuth();
@@ -35,11 +34,9 @@ export default function BulkGradingPage() {
   
   if (authLoading) {
     return (
-      <ProtectedRoute>
-        <Flex justifyContent="center" padding="2rem">
-          <Loader size="large" />
-        </Flex>
-      </ProtectedRoute>
+      <Flex justifyContent="center" padding="2rem">
+        <Loader size="large" />
+      </Flex>
     );
   }
   
@@ -48,72 +45,68 @@ export default function BulkGradingPage() {
   
   if (!isInstructor) {
     return (
-      <ProtectedRoute>
-        <Card>
-          <Heading level={2}>Access Denied</Heading>
-          <Text>
-            You don't have permission to access this page. Please contact an administrator if you believe this is an error.
-          </Text>
-          <Link href="/secure/dashboard">
-            <Button variation="primary" marginTop="1rem">Return to Dashboard</Button>
-          </Link>
-        </Card>
-      </ProtectedRoute>
+      <Card>
+        <Heading level={2}>Access Denied</Heading>
+        <Text>
+          You don't have permission to access this page. Please contact an administrator if you believe this is an error.
+        </Text>
+        <Link href="/secure/dashboard">
+          <Button variation="primary" marginTop="1rem">Return to Dashboard</Button>
+        </Link>
+      </Card>
     );
   }
   
   return (
-    <ProtectedRoute>
-      <Flex direction="column" gap="1rem" padding="1rem">
-        <Flex justifyContent="space-between" alignItems="center" marginBottom="1rem">
-          <Heading level={2}>Bulk Grading</Heading>
-          <Link href="/secure/instructor/submissions">
-            <Button variation="link">Back to Submissions</Button>
-          </Link>
-        </Flex>
-        
-        <Card>
-          <Heading level={4}>Filter Submissions</Heading>
-          <Flex direction={{ base: 'column', medium: 'row' }} gap="1rem" marginTop="1rem">
-            <SelectField
-              label="Cohort"
-              value={selectedCohort}
-              onChange={(e) => setSelectedCohort(e.target.value)}
-              flex={1}
-            >
-              <option value="">All Cohorts</option>
-              {cohorts.map(cohort => (
-                <option key={cohort.id} value={cohort.id}>
-                  {cohort.name}
-                </option>
-              ))}
-            </SelectField>
-            
-            <SelectField
-              label="Week"
-              value={selectedWeek}
-              onChange={(e) => setSelectedWeek(e.target.value)}
-              flex={1}
-            >
-              <option value="">All Weeks</option>
-              {weeks.map(week => (
-                <option key={week.id} value={week.id}>
-                  {week.name}
-                </option>
-              ))}
-            </SelectField>
-          </Flex>
-        </Card>
-        
-        <BulkGradingActions 
-          cohortId={selectedCohort || undefined} 
-          week={selectedWeek ? parseInt(selectedWeek) : undefined}
-          onGradingComplete={() => {
-            // In a real app, we might want to refresh data or show a success message
-            console.log('Bulk grading completed');
-          }}
-        />
+    <Flex direction="column" gap="1rem" padding="1rem">
+      <Flex justifyContent="space-between" alignItems="center" marginBottom="1rem">
+        <Heading level={2}>Bulk Grading</Heading>
+        <Link href="/secure/instructor/submissions">
+          <Button variation="link">Back to Submissions</Button>
+        </Link>
       </Flex>
-    </ProtectedRoute>
+      
+      <Card>
+        <Heading level={4}>Filter Submissions</Heading>
+        <Flex direction={{ base: 'column', medium: 'row' }} gap="1rem" marginTop="1rem">
+          <SelectField
+            label="Cohort"
+            value={selectedCohort}
+            onChange={(e) => setSelectedCohort(e.target.value)}
+            flex={1}
+          >
+            <option value="">All Cohorts</option>
+            {cohorts.map(cohort => (
+              <option key={cohort.id} value={cohort.id}>
+                {cohort.name}
+              </option>
+            ))}
+          </SelectField>
+          
+          <SelectField
+            label="Week"
+            value={selectedWeek}
+            onChange={(e) => setSelectedWeek(e.target.value)}
+            flex={1}
+          >
+            <option value="">All Weeks</option>
+            {weeks.map(week => (
+              <option key={week.id} value={week.id}>
+                {week.name}
+              </option>
+            ))}
+          </SelectField>
+        </Flex>
+      </Card>
+      
+      <BulkGradingActions 
+        cohortId={selectedCohort || undefined} 
+        week={selectedWeek ? parseInt(selectedWeek) : undefined}
+        onGradingComplete={() => {
+          // In a real app, we might want to refresh data or show a success message
+          console.log('Bulk grading completed');
+        }}
+      />
+    </Flex>
   );
 } 

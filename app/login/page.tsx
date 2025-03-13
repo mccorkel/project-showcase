@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { Authenticator } from '@aws-amplify/ui-react';
 import { Amplify } from 'aws-amplify';
-import outputs from '@/amplify_outputs.json';
+import outputs from '../../amplify_outputs.json';
 
 // Configure Amplify in login page
 Amplify.configure(outputs);
