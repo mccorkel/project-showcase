@@ -45,3 +45,6 @@ students.json.copy
 submissions.json
 submissions.json.copy
 user_credentials.json
+sync_results.json
+student_profiles_results.json
+submissions_results.json
