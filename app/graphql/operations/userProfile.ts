@@ -193,4 +193,53 @@ export const updateProfileImage = /* GraphQL */ `
       profileImageUrl
     }
   }
+`;
+
+// Get student profiles by cohort ID (for instructors)
+export const getStudentProfilesByCohort = /* GraphQL */ `
+  query GetStudentProfilesByCohort($cohortId: String!, $limit: Int, $nextToken: String) {
+    listStudentProfiles(
+      filter: { cohortId: { eq: $cohortId } }
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        userId
+        firstName
+        lastName
+        title
+        profileImageUrl
+        location
+        experienceYears
+        contactEmail
+        cohortId
+      }
+      nextToken
+    }
+  }
+`;
+
+// Get all student profiles (for instructors/admins)
+export const getAllStudentProfiles = /* GraphQL */ `
+  query GetAllStudentProfiles($limit: Int, $nextToken: String) {
+    listStudentProfiles(
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        userId
+        firstName
+        lastName
+        title
+        profileImageUrl
+        location
+        experienceYears
+        contactEmail
+        cohortId
+      }
+      nextToken
+    }
+  }
 `; 

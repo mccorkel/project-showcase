@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { isProtectedRoute, getRequiredRoles, getRedirectPath } from './app/utils/security/routeProtection';
 
+// Set this to true to bypass authentication checks during development
+const BYPASS_AUTH_FOR_DEV = true;
+
 export function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
   

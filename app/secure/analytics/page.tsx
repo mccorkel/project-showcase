@@ -7,43 +7,25 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Card, Heading, Text, Button, Flex, Loader } from '@aws-amplify/ui-react';
 import AnalyticsDashboard from '@/components/analytics/AnalyticsDashboard';
 import { UserRole } from '@/utils/security/fieldAccessControl';
+import { generateClient } from 'aws-amplify/api';
+
+const client = generateClient();
 
 export default function PersonalAnalyticsPage() {
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, studentProfile, isLoading: authLoading } = useAuth();
   const [showcaseId, setShowcaseId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [studentProfile, setStudentProfile] = useState<any>(null);
   
   useEffect(() => {
-    // When user is loaded, fetch the student profile and showcase ID
-    if (user) {
-      // In a real app, we would fetch the student profile and showcase ID from the API
-      // For now, we'll simulate this with a timeout
-      const fetchData = async () => {
-        try {
-          // Simulate API call
-          await new Promise(resolve => setTimeout(resolve, 500));
-          
-          // For demo purposes, we'll create a mock student profile
-          const mockStudentProfile = {
-            id: user.username,
-            username: user.username,
-            firstName: 'Demo',
-            lastName: 'Student'
-          };
-          
-          setStudentProfile(mockStudentProfile);
-          setShowcaseId(mockStudentProfile.id);
-        } catch (error) {
-          console.error('Error fetching data:', error);
-        } finally {
-          setIsLoading(false);
-        }
-      };
-      
-      fetchData();
+    // When studentProfile is loaded, set the showcase ID
+    if (studentProfile) {
+      setShowcaseId(studentProfile.id);
+      setIsLoading(false);
+    } else if (user && !authLoading) {
+      // If we have a user but no student profile, we're done loading
+      setIsLoading(false);
     }
-  }, [user]);
+  }, [user, studentProfile, authLoading]);
   
   if (authLoading || isLoading) {
     return (
@@ -86,7 +68,7 @@ export default function PersonalAnalyticsPage() {
         
         <AnalyticsDashboard 
           showcaseId={showcaseId} 
-          username={studentProfile?.username || ''}
+          username={studentProfile?.firstName ? `${studentProfile.firstName} ${studentProfile.lastName}` : user?.username || ''}
         />
       </Flex>
     </ProtectedRoute>

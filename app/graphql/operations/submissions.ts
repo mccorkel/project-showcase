@@ -183,4 +183,60 @@ export const deleteSubmission = /* GraphQL */ `
       id
     }
   }
+`;
+
+// Get submissions by cohort ID (for instructors)
+export const getSubmissionsByCohort = /* GraphQL */ `
+  query GetSubmissionsByCohort($cohortId: String!, $status: String, $limit: Int, $nextToken: String) {
+    listSubmissions(
+      filter: { 
+        cohortId: { eq: $cohortId },
+        status: { eq: $status }
+      }
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        studentProfileId
+        week
+        title
+        description
+        status
+        submittedAt
+        gradedAt
+        grade
+        passing
+        technologies
+        cohortId
+      }
+      nextToken
+    }
+  }
+`;
+
+// Get all submissions (for instructors/admins)
+export const getAllSubmissions = /* GraphQL */ `
+  query GetAllSubmissions($limit: Int, $nextToken: String) {
+    listSubmissions(
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        studentProfileId
+        week
+        title
+        description
+        status
+        submittedAt
+        gradedAt
+        grade
+        passing
+        technologies
+        cohortId
+      }
+      nextToken
+    }
+  }
 `; 

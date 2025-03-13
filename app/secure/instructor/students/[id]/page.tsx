@@ -1,122 +1,220 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { UserRole } from '@/utils/security/fieldAccessControl';
+import { generateClient } from 'aws-amplify/api';
+import { Loader } from '@aws-amplify/ui-react';
+import { getStudentProfile } from '@/graphql/operations/userProfile';
+import { getSubmissions } from '@/graphql/operations/submissions';
+import { getCohort } from '@/graphql/operations/cohorts';
+import { getUserProfile } from '@/graphql/operations/userProfile';
 
-// Mock data for student detail
-const mockData = {
-  student: {
-    id: '101',
-    name: 'Alex Johnson',
-    email: 'alex.johnson@example.com',
-    cohort: 'Web Development - Fall 2023',
-    profileImage: 'https://randomuser.me/api/portraits/men/32.jpg',
-    joinDate: '2023-09-01T00:00:00Z',
-    lastActive: '2023-10-15T10:30:00Z',
-    bio: 'Full-stack developer with a passion for creating intuitive user experiences. Currently focused on mastering React and Node.js.',
-    location: 'San Francisco, CA',
-    socialLinks: {
-      github: 'https://github.com/alexjohnson',
-      linkedin: 'https://linkedin.com/in/alexjohnson',
-      twitter: 'https://twitter.com/alexjohnson',
-      portfolio: 'https://alexjohnson.dev'
-    },
-    skills: [
-      { category: 'Frontend', skills: ['HTML', 'CSS', 'JavaScript', 'React', 'Tailwind CSS'] },
-      { category: 'Backend', skills: ['Node.js', 'Express', 'MongoDB'] },
-      { category: 'Tools', skills: ['Git', 'VS Code', 'Figma'] }
-    ],
-    showcasePublished: true,
-    showcaseUrl: '/profile/alexjohnson'
-  },
-  submissions: [
-    {
-      id: '1001',
-      week: 1,
-      title: 'HTML/CSS Portfolio',
-      submittedAt: '2023-09-08T14:30:00Z',
-      grade: 'A',
-      passing: true,
-      feedback: 'Excellent work! Your portfolio is well-structured and responsive.',
-      demoLink: 'https://example.com/demo1',
-      repoLink: 'https://github.com/alexjohnson/portfolio'
-    },
-    {
-      id: '1002',
-      week: 2,
-      title: 'JavaScript Game',
-      submittedAt: '2023-09-15T16:45:00Z',
-      grade: 'A-',
-      passing: true,
-      feedback: 'Great game implementation. Consider adding more comments to your code.',
-      demoLink: 'https://example.com/demo2',
-      repoLink: 'https://github.com/alexjohnson/js-game'
-    },
-    {
-      id: '1003',
-      week: 3,
-      title: 'React Application',
-      submittedAt: '2023-09-22T11:20:00Z',
-      grade: 'B+',
-      passing: true,
-      feedback: 'Good work on your React app. State management could be improved.',
-      demoLink: 'https://example.com/demo3',
-      repoLink: 'https://github.com/alexjohnson/react-app'
-    },
-    {
-      id: '1004',
-      week: 4,
-      title: 'API Integration',
-      submittedAt: '2023-09-29T13:15:00Z',
-      grade: 'A',
-      passing: true,
-      feedback: 'Excellent API integration. Your error handling is particularly good.',
-      demoLink: 'https://example.com/demo4',
-      repoLink: 'https://github.com/alexjohnson/api-project'
-    },
-    {
-      id: '1005',
-      week: 5,
-      title: 'Database Project',
-      submittedAt: '2023-10-06T15:40:00Z',
-      grade: 'A-',
-      passing: true,
-      feedback: 'Great database design. Your queries are efficient.',
-      demoLink: 'https://example.com/demo5',
-      repoLink: 'https://github.com/alexjohnson/db-project'
-    },
-    {
-      id: '1006',
-      week: 6,
-      title: 'Full Stack Application',
-      submittedAt: '2023-10-13T10:25:00Z',
-      grade: 'B',
-      passing: true,
-      feedback: 'Good full stack implementation. Frontend and backend integration works well.',
-      demoLink: 'https://example.com/demo6',
-      repoLink: 'https://github.com/alexjohnson/fullstack-app'
-    }
-  ],
-  analytics: {
-    submissionRate: '100%',
-    passingRate: '100%',
-    averageGrade: 'A-',
-    showcaseViews: 45,
-    showcaseReferrers: [
-      { source: 'LinkedIn', count: 20 },
-      { source: 'GitHub', count: 15 },
-      { source: 'Direct', count: 10 }
-    ]
-  }
-};
+const client = generateClient();
 
-export default async function StudentDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+// Define the interface for the page props
+interface StudentDetailPageProps {
+  params: Promise<{
+    id: string;
+  }>;
+}
+
+export default function StudentDetailPage({ params }: StudentDetailPageProps) {
+  // Use async/await to handle the Promise
+  const [id, setId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('profile');
+  const [student, setStudent] = useState<any>(null);
+  const [user, setUser] = useState<any>(null);
+  const [cohort, setCohort] = useState<any>(null);
+  const [submissions, setSubmissions] = useState<any[]>([]);
+  const [analytics, setAnalytics] = useState<any>({
+    submissionRate: '0%',
+    passingRate: '0%',
+    averageGrade: 'N/A',
+    showcaseViews: 0,
+    showcaseReferrers: []
+  });
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Resolve the params Promise when the component mounts
+  useEffect(() => {
+    const resolveParams = async () => {
+      try {
+        const resolvedParams = await params;
+        setId(resolvedParams.id);
+      } catch (error) {
+        console.error('Error resolving params:', error);
+      }
+    };
+    
+    resolveParams();
+  }, [params]);
+  
+  // Fetch student data when id is resolved
+  useEffect(() => {
+    if (id) {
+      fetchStudentData();
+    }
+  }, [id]);
+  
+  // Fetch student profile, user data, and submissions
+  const fetchStudentData = async () => {
+    if (!id) return;
+    
+    setIsLoading(true);
+    
+    try {
+      // Fetch student profile
+      const profileResult = await client.graphql({
+        query: getStudentProfile,
+        variables: {
+          userId: id
+        }
+      });
+      
+      if ('data' in profileResult && 
+          profileResult.data && 
+          typeof profileResult.data === 'object' && 
+          profileResult.data !== null && 
+          'getStudentProfile' in profileResult.data) {
+        
+        const studentProfile = profileResult.data.getStudentProfile;
+        setStudent(studentProfile);
+        
+        // Fetch user data
+        if (studentProfile) {
+          const userResult = await client.graphql({
+            query: getUserProfile,
+            variables: {
+              userId: studentProfile.userId
+            }
+          });
+          
+          if ('data' in userResult && 
+              userResult.data && 
+              typeof userResult.data === 'object' && 
+              userResult.data !== null && 
+              'getUser' in userResult.data) {
+            setUser(userResult.data.getUser);
+          }
+          
+          // Fetch cohort data if cohortId exists
+          if (studentProfile.cohortId) {
+            const cohortResult = await client.graphql({
+              query: getCohort,
+              variables: {
+                id: studentProfile.cohortId
+              }
+            });
+            
+            if ('data' in cohortResult && 
+                cohortResult.data && 
+                typeof cohortResult.data === 'object' && 
+                cohortResult.data !== null && 
+                'getCohort' in cohortResult.data) {
+              setCohort(cohortResult.data.getCohort);
+            }
+          }
+          
+          // Fetch submissions
+          const submissionsResult = await client.graphql({
+            query: getSubmissions,
+            variables: {
+              studentProfileId: studentProfile.id,
+              limit: 100
+            }
+          });
+          
+          if ('data' in submissionsResult && 
+              submissionsResult.data && 
+              typeof submissionsResult.data === 'object' && 
+              submissionsResult.data !== null && 
+              'listSubmissions' in submissionsResult.data) {
+            
+            const submissionItems = submissionsResult.data.listSubmissions.items;
+            setSubmissions(submissionItems);
+            
+            // Calculate analytics
+            calculateAnalytics(submissionItems);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching student data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Calculate analytics based on submissions
+  const calculateAnalytics = (submissionItems: any[]) => {
+    if (!submissionItems || submissionItems.length === 0) {
+      return;
+    }
+    
+    // Calculate submission rate (assuming 1 submission per week)
+    const totalWeeks = Math.max(...submissionItems.map(s => s.week || 0));
+    const submissionRate = totalWeeks > 0 
+      ? Math.round((submissionItems.length / totalWeeks) * 100) + '%'
+      : '100%';
+    
+    // Calculate passing rate
+    const gradedSubmissions = submissionItems.filter(s => s.gradedAt);
+    const passingSubmissions = gradedSubmissions.filter(s => s.passing);
+    const passingRate = gradedSubmissions.length > 0 
+      ? Math.round((passingSubmissions.length / gradedSubmissions.length) * 100) + '%'
+      : 'N/A';
+    
+    // Calculate average grade
+    const gradeMap: Record<string, number> = {
+      'A+': 4.3, 'A': 4.0, 'A-': 3.7,
+      'B+': 3.3, 'B': 3.0, 'B-': 2.7,
+      'C+': 2.3, 'C': 2.0, 'C-': 1.7,
+      'D+': 1.3, 'D': 1.0, 'D-': 0.7,
+      'F': 0.0
+    };
+    
+    const gradesWithValues = gradedSubmissions
+      .filter(s => s.grade && s.grade in gradeMap)
+      .map(s => gradeMap[s.grade]);
+    
+    let averageGrade = 'N/A';
+    
+    if (gradesWithValues.length > 0) {
+      const sum = gradesWithValues.reduce((acc, val) => acc + val, 0);
+      const avg = sum / gradesWithValues.length;
+      
+      // Convert numeric average back to letter grade
+      if (avg >= 4.3) averageGrade = 'A+';
+      else if (avg >= 4.0) averageGrade = 'A';
+      else if (avg >= 3.7) averageGrade = 'A-';
+      else if (avg >= 3.3) averageGrade = 'B+';
+      else if (avg >= 3.0) averageGrade = 'B';
+      else if (avg >= 2.7) averageGrade = 'B-';
+      else if (avg >= 2.3) averageGrade = 'C+';
+      else if (avg >= 2.0) averageGrade = 'C';
+      else if (avg >= 1.7) averageGrade = 'C-';
+      else if (avg >= 1.3) averageGrade = 'D+';
+      else if (avg >= 1.0) averageGrade = 'D';
+      else if (avg >= 0.7) averageGrade = 'D-';
+      else averageGrade = 'F';
+    }
+    
+    // For showcase views and referrers, we would need to fetch analytics data
+    // For now, we'll use placeholder values
+    setAnalytics({
+      submissionRate,
+      passingRate,
+      averageGrade,
+      showcaseViews: 0,
+      showcaseReferrers: []
+    });
+  };
   
   // Format date for display
   const formatDate = (dateString: string) => {
+    if (!dateString) return 'N/A';
+    
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
       year: 'numeric',
@@ -127,6 +225,8 @@ export default async function StudentDetailPage({ params }: { params: Promise<{ 
   
   // Format datetime for display
   const formatDateTime = (dateString: string) => {
+    if (!dateString) return 'N/A';
+    
     const date = new Date(dateString);
     return date.toLocaleString('en-US', {
       month: 'short',
@@ -138,6 +238,40 @@ export default async function StudentDetailPage({ params }: { params: Promise<{ 
     });
   };
   
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <Loader size="large" />
+      </div>
+    );
+  }
+  
+  if (!student) {
+    return (
+      <div className="error-state">
+        <h1>Student Not Found</h1>
+        <p>The student profile you are looking for does not exist or you do not have permission to view it.</p>
+        <Link href="/secure/instructor/students" className="back-link">
+          ← Back to Students
+        </Link>
+      </div>
+    );
+  }
+  
+  // Parse social links from JSON if available
+  const socialLinks = student.socialLinks 
+    ? (typeof student.socialLinks === 'string' 
+        ? JSON.parse(student.socialLinks) 
+        : student.socialLinks)
+    : {};
+  
+  // Parse skills from JSON if available
+  const skills = student.skills 
+    ? (typeof student.skills === 'string'
+        ? JSON.parse(student.skills)
+        : student.skills)
+    : [];
+  
   return (
     <main className="student-detail-page">
       <div className="page-header">
@@ -146,18 +280,21 @@ export default async function StudentDetailPage({ params }: { params: Promise<{ 
         </Link>
         <div className="student-header">
           <div className="student-profile-image">
-            <img src={mockData.student.profileImage} alt={mockData.student.name} />
+            <img 
+              src={student.profileImageUrl || 'https://via.placeholder.com/150'} 
+              alt={`${student.firstName} ${student.lastName}`} 
+            />
           </div>
           <div className="student-info">
-            <h1>{mockData.student.name}</h1>
-            <p className="student-email">{mockData.student.email}</p>
-            <p className="student-cohort">{mockData.student.cohort}</p>
+            <h1>{student.firstName} {student.lastName}</h1>
+            <p className="student-email">{student.contactEmail || user?.email || 'No email available'}</p>
+            <p className="student-cohort">{cohort?.name || 'No cohort assigned'}</p>
             <div className="student-meta">
               <span className="meta-item">
-                <span className="label">Joined:</span> {formatDate(mockData.student.joinDate)}
+                <span className="label">Joined:</span> {user?.lastLogin ? formatDate(user.lastLogin) : 'N/A'}
               </span>
               <span className="meta-item">
-                <span className="label">Last Active:</span> {formatDateTime(mockData.student.lastActive)}
+                <span className="label">Last Active:</span> {user?.lastLogin ? formatDateTime(user.lastLogin) : 'N/A'}
               </span>
             </div>
           </div>
@@ -196,29 +333,34 @@ export default async function StudentDetailPage({ params }: { params: Promise<{ 
           <div className="profile-tab">
             <section className="bio-section">
               <h2>About</h2>
-              <p>{mockData.student.bio}</p>
-              <p><strong>Location:</strong> {mockData.student.location}</p>
+              <p>{student.bio || 'No bio available'}</p>
+              <p><strong>Location:</strong> {student.location || 'Not specified'}</p>
+              {student.title && <p><strong>Title:</strong> {student.title}</p>}
+              {student.experienceYears && <p><strong>Experience:</strong> {student.experienceYears} years</p>}
             </section>
             
+            {Object.keys(socialLinks).length > 0 && (
             <section className="social-links-section">
               <h2>Social Links</h2>
               <div className="social-links">
-                {Object.entries(mockData.student.socialLinks).map(([platform, url]) => (
-                  <a key={platform} href={url} target="_blank" rel="noopener noreferrer" className="social-link">
+                  {Object.entries(socialLinks).map(([platform, url]) => (
+                    <a key={platform} href={url as string} target="_blank" rel="noopener noreferrer" className="social-link">
                     {platform.charAt(0).toUpperCase() + platform.slice(1)}
                   </a>
                 ))}
               </div>
             </section>
+            )}
             
+            {skills.length > 0 && (
             <section className="skills-section">
               <h2>Skills</h2>
               <div className="skills-categories">
-                {mockData.student.skills.map((category, index) => (
+                  {skills.map((category: any, index: number) => (
                   <div key={index} className="skill-category">
                     <h3>{category.category}</h3>
                     <div className="skills-list">
-                      {category.skills.map((skill, skillIndex) => (
+                        {category.skills.map((skill: string, skillIndex: number) => (
                         <span key={skillIndex} className="skill-tag">{skill}</span>
                       ))}
                     </div>
@@ -226,6 +368,7 @@ export default async function StudentDetailPage({ params }: { params: Promise<{ 
                 ))}
               </div>
             </section>
+            )}
           </div>
         )}
         
@@ -235,131 +378,196 @@ export default async function StudentDetailPage({ params }: { params: Promise<{ 
               <h2>Submissions</h2>
               <div className="submissions-stats">
                 <div className="stat">
-                  <span className="stat-value">{mockData.submissions.length}</span>
+                  <span className="stat-value">{submissions.length}</span>
                   <span className="stat-label">Total</span>
                 </div>
                 <div className="stat">
-                  <span className="stat-value">{mockData.analytics.submissionRate}</span>
+                  <span className="stat-value">{analytics.submissionRate}</span>
                   <span className="stat-label">Submission Rate</span>
                 </div>
                 <div className="stat">
-                  <span className="stat-value">{mockData.analytics.passingRate}</span>
+                  <span className="stat-value">{analytics.passingRate}</span>
                   <span className="stat-label">Passing Rate</span>
                 </div>
                 <div className="stat">
-                  <span className="stat-value">{mockData.analytics.averageGrade}</span>
+                  <span className="stat-value">{analytics.averageGrade}</span>
                   <span className="stat-label">Average Grade</span>
                 </div>
               </div>
             </div>
             
+            {submissions.length === 0 ? (
+              <div className="empty-state">
+                <p>No submissions found for this student.</p>
+              </div>
+            ) : (
             <div className="submissions-list">
-              {mockData.submissions.map(submission => (
+                {submissions
+                  .sort((a, b) => (b.week || 0) - (a.week || 0))
+                  .map(submission => (
                 <div key={submission.id} className="submission-card">
                   <div className="submission-header">
-                    <h3>Week {submission.week}: {submission.title}</h3>
-                    <div className="submission-grade">
-                      <span className={`grade grade-${submission.grade.charAt(0).toLowerCase()}`}>
-                        {submission.grade}
+                        <h3>{submission.title || `Week ${submission.week} Submission`}</h3>
+                        <div className="submission-meta">
+                          {submission.week && <span className="week">Week {submission.week}</span>}
+                          <span className="date">Submitted: {formatDateTime(submission.submittedAt)}</span>
+                          {submission.gradedAt && (
+                            <span className="grade">
+                              Grade: <strong>{submission.grade || 'Not graded'}</strong>
+                            </span>
+                          )}
+                          <span className={`status ${submission.passing ? 'passing' : 'not-passing'}`}>
+                            {submission.passing ? 'Passing' : 'Not Passing'}
                       </span>
                     </div>
                   </div>
-                  <div className="submission-meta">
-                    <p>Submitted: {formatDateTime(submission.submittedAt)}</p>
-                    <p>Status: {submission.passing ? 'Passing' : 'Not Passing'}</p>
+                      
+                      <div className="submission-content">
+                        {submission.description && (
+                          <div className="description">
+                            <p>{submission.description}</p>
+                          </div>
+                        )}
+                        
+                        {submission.technologies && submission.technologies.length > 0 && (
+                          <div className="technologies">
+                            <h4>Technologies:</h4>
+                            <div className="tech-tags">
+                              {submission.technologies.map((tech: string, index: number) => (
+                                <span key={index} className="tech-tag">{tech}</span>
+                              ))}
+                            </div>
                   </div>
+                        )}
+                        
                   <div className="submission-links">
-                    <a href={submission.demoLink} target="_blank" rel="noopener noreferrer" className="link-button">
-                      View Demo
-                    </a>
-                    <a href={submission.repoLink} target="_blank" rel="noopener noreferrer" className="link-button">
-                      View Repository
-                    </a>
+                          {submission.demoLink && (
+                            <a href={submission.demoLink} target="_blank" rel="noopener noreferrer" className="link">
+                              Demo
+                            </a>
+                          )}
+                          {submission.repoLink && (
+                            <a href={submission.repoLink} target="_blank" rel="noopener noreferrer" className="link">
+                              Repository
+                            </a>
+                          )}
+                          {submission.deployedUrl && (
+                            <a href={submission.deployedUrl} target="_blank" rel="noopener noreferrer" className="link">
+                              Deployed Site
+                            </a>
+                          )}
                   </div>
-                  <div className="submission-feedback">
-                    <h4>Feedback</h4>
-                    <p>{submission.feedback}</p>
                   </div>
+                      
                   <div className="submission-actions">
                     <Link href={`/secure/instructor/submissions/${submission.id}/grade`}>
-                      <button className="edit-grade-button">Edit Grade</button>
+                          <button className="grade-button">
+                            {submission.gradedAt ? 'Update Grade' : 'Grade'}
+                          </button>
                     </Link>
                   </div>
                 </div>
               ))}
             </div>
+            )}
           </div>
         )}
         
         {activeTab === 'showcase' && (
           <div className="showcase-tab">
-            <div className="showcase-header">
               <h2>Student Showcase</h2>
+            
               <div className="showcase-status">
-                {mockData.student.showcasePublished ? (
-                  <span className="status-published">Published</span>
-                ) : (
-                  <span className="status-unpublished">Not Published</span>
-                )}
+              <h3>Showcase Status</h3>
+              <div className="status-indicator">
+                <span className={`status-badge ${student.id ? 'status-active' : 'status-inactive'}`}>
+                  {student.id ? 'Published' : 'Not Published'}
+                </span>
               </div>
+              
+              {student.id ? (
+                <div className="showcase-actions">
+                  <Link href={`/profile/${student.id}`} target="_blank" className="primary-button">
+                    View Showcase
+                  </Link>
+                </div>
+              ) : (
+                <p className="no-showcase-message">
+                  This student has not published their showcase yet.
+                </p>
+              )}
             </div>
             
-            {mockData.student.showcasePublished ? (
-              <div className="showcase-content">
-                <p>
-                  This student has published their showcase. You can view it at the link below.
+            <div className="selected-projects">
+              <h3>Selected Projects</h3>
+              
+              {submissions.filter(s => s.showcaseIncluded).length === 0 ? (
+                <p className="no-projects-message">
+                  No projects have been selected for the showcase.
                 </p>
-                <div className="showcase-actions">
-                  <a href={mockData.student.showcaseUrl} target="_blank" rel="noopener noreferrer" className="primary-button">
-                    View Public Showcase
-                  </a>
+              ) : (
+                <div className="project-list">
+                  {submissions
+                    .filter(s => s.showcaseIncluded)
+                    .sort((a, b) => (a.showcasePriority || 0) - (b.showcasePriority || 0))
+                    .map(project => (
+                      <div key={project.id} className="project-card">
+                        <div className="project-image">
+                          {project.featuredImageUrl ? (
+                            <img src={project.featuredImageUrl} alt={project.title} />
+                          ) : (
+                            <div className="placeholder-image">No Image</div>
+                          )}
                 </div>
-                <div className="showcase-preview">
-                  <h3>Showcase Preview</h3>
-                  <div className="preview-placeholder">
-                    <p>Showcase preview would be displayed here in the full implementation.</p>
+                        <div className="project-info">
+                          <h4>{project.title}</h4>
+                          <p>{project.description}</p>
+                          <div className="project-meta">
+                            <span className="priority">Priority: {project.showcasePriority || 'Not set'}</span>
                   </div>
                 </div>
               </div>
-            ) : (
-              <div className="showcase-content">
-                <p>
-                  This student has not yet published their showcase.
-                </p>
+                    ))}
               </div>
             )}
+            </div>
           </div>
         )}
         
         {activeTab === 'analytics' && (
           <div className="analytics-tab">
-            <h2>Student Analytics</h2>
+            <h2>Showcase Analytics</h2>
             
-            <div className="analytics-section">
-              <h3>Showcase Performance</h3>
-              <div className="analytics-cards">
+            <div className="analytics-overview">
                 <div className="analytics-card">
-                  <h4>Total Views</h4>
-                  <div className="analytics-value">{mockData.analytics.showcaseViews}</div>
-                </div>
+                <h3>Views</h3>
+                <div className="analytics-value">{analytics.showcaseViews}</div>
+                <p className="analytics-description">Total showcase views</p>
               </div>
               
-              <h3>Traffic Sources</h3>
+              <div className="analytics-card">
+                <h3>Top Referrers</h3>
+                {analytics.showcaseReferrers.length === 0 ? (
+                  <p className="no-data-message">No referrer data available</p>
+                ) : (
               <div className="referrers-list">
-                {mockData.analytics.showcaseReferrers.map((referrer, index) => (
+                    {analytics.showcaseReferrers.map((referrer: any, index: number) => (
                   <div key={index} className="referrer-item">
-                    <div className="referrer-source">{referrer.source}</div>
-                    <div className="referrer-count">{referrer.count} views</div>
-                    <div className="referrer-bar" style={{ width: `${(referrer.count / mockData.analytics.showcaseViews) * 100}%` }}></div>
+                        <span className="referrer-source">{referrer.source}</span>
+                        <span className="referrer-count">{referrer.count}</span>
+                        <div className="referrer-bar-container">
+                          <div className="referrer-bar" style={{ width: `${(referrer.count / analytics.showcaseViews) * 100}%` }}></div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                )}
               </div>
             </div>
             
-            <div className="analytics-section">
-              <h3>Academic Performance</h3>
-              <p className="placeholder-message">
-                In the full implementation, this section would display charts and graphs showing the student's academic performance over time.
+            <div className="analytics-message">
+              <p>
+                Note: Detailed analytics will be available once the student's showcase has been published and received views.
               </p>
             </div>
           </div>
